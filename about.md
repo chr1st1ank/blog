@@ -13,14 +13,15 @@ You will find articles about Python, C++, Go, Kubernetes, home automation and ma
 
 
 ## About me
+I am Dr. Christian Krudewig and addicted to coding.
 
-I am Dr. Christian Krudewig, a machine learning architect and addicted to coding.
+Currently I work as a machine learning architect and my day-to-day business is about designing, implementing and reshaping machine learning solutions from the software engineering perspective. 
+However, originally I studied economics. Then I spend some more time at universities teaching and researching in the area of operations management. Afterwards I worked first as an IT project manager then as a data scientist for some time before I found my current architect role. The connection between all these activities has always been my love to programming and the fascination of solving real-live problems with computers. 
 
-I studied economics, spend some more time at the university researching the area of operations management, worked as an IT project manager, data scientist, and now as an ML architect. The connection between all these activities has always been my love to programming and the fascination of solving real-live problems with computers. 
+Back at university I learned to analyze data and forecast behaviour of markets or tax subjects. During my research I could see how one can solve problems far beyond human solvability with clever algorihms. As a project manager I could contribute to making life much easier for store managers of a big retail company through automated product ordering. And finally in my current job I immersed into the creation of more and more complex machine learning applications using all the cool tools, languages and cloud environment that we have at hand currently. 
 
-Back at university I learned to analyze data and forecast behaviour of markets or tax subjects. During my research I could see how one can solve problems far beyond human solvability with clever algorihms. As a project manager I could contribute to making the live easier much easier for store managers of a big retail company through automated replenishment of stocks. And finally in my current job I immersed into the creation of more and more complex machine learning applications routinely using technologies which just hadn't been there when I finished my studies in 2009 - sometimes I can hardly believe how swiftly technology evolves.
+What puzzles me sometimes is that we are now routinely using "established" technologies which just hadn't been there when I finished my studies - and that was in 2009 which doesn't feel that far away for me. Some examples for this are Elasticsearch ([first release 2010](https://en.wikipedia.org/wiki/Elasticsearch)), the Go language ([first appeared 2009](https://en.wikipedia.org/wiki/Go_(programming_language))), Kubernetes ([inital release 2014](https://en.wikipedia.org/wiki/Kubernetes)), scikit-learn([first public release 2010](https://en.wikipedia.org/wiki/Scikit-learn)). I could continue forever with more useful tools, languages, databases and libraries that were introduced in the last ten years, mostly as open source software. I enjoy very much being in the middle of this development and seeing it all come to action.
 
 
 ## Credits
-
-This page is hosted on [github.io](https://github.io) with the help of [Jekyll](https://jekyllrb.com/). It uses the ["broccolini/swiss"](https://github.com/broccolini/swiss) theme. Thanks to all the open source contributors who created this great toolchain that I can build upon.
+This page is hosted on [github.io](https://github.io) with the help of [Jekyll](https://jekyllrb.com/). It uses the ["broccolini/swiss"](https://github.com/broccolini/swiss) theme. Many thanks to all the open source contributors who created this great toolchain that I can build upon!
