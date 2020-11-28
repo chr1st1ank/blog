@@ -21,71 +21,47 @@ With the increasing use of RESTfull webservices together with more and more powe
 So a newer kind of static site generators has evolved, addressing the needs of developers better than the classic tools. Some examples of this are [Jekyll](https://jekyllrb.com/), [Middleman](http://middlemanapp.com/) or [Hugo](http://gohugo.io/). With these one can prepare the templates as plain HTML/CSS/Javascript files while the content is typically written as plain text files in Markdown. This allows to keep the content completely under version control, similar to source code. When the text is written, the site generator compiles the markdown files into HTML and you only need a static webserver to deliver the content. No database is needed and no security issues with server-side scripting languages can occur.
 
 ## Setting up a blog with Github-pages and Jekyll
-Github offers the option to serve static websites via the built-in service "github-pages". If you have a github repository you can configure github-pages to create a web page from the contents of a certain folder or git branch. Per default the static site generator jekyll is used to render the contents. This setup already offers enough functionality for something simple as a blog.
+Github offers the option to serve static websites via the built-in service "github-pages". If you tell a github repository your own you can configure github-pages to create a web page from the contents of a certain folder or git branch. Per default the static site generator jekyll is used to render the contents. This setup already offers enough functionality for something simple as a blog.
 
-To start a github account and some repository on it are needed. 
+I am not going to detail out how to set up a page with Jekyll. There are loads of blog posts explaining it already really well. For example take a look at [Kilt & Code](https://www.kiltandcode.com/2020/04/30/how-to-create-a-blog-using-jekyll-and-github-pages-on-windows/) or at [Aleksandr Hovhannisyan's blog](https://www.aleksandrhovhannisyan.com/blog/dev/getting-started-with-jekyll-and-github-pages/) and of course the section about github-pages of the very detailed [jekyll documentation](https://jekyllrb.com/docs/github-pages/).
 
-### Initial steps
-- github account
-- repository
-- Set up local ruby environment
-#### Setting up jekyll for local previews
+In essence, the result looks as follows:
 
-Jekyll is a ruby package. So you need a ruby environment with the necessary dependencies to generate the blog as html page. Take a look at the [jekyll documentation](https://jekyllrb.com/docs/step-by-step/) for a detailed guide on how to set things up. To set up a fresh working environment for this blog only the following commands are necessary (this is for arch linux):
+* The actual text is written in markdown files. So the main page will end up in an `index.md` at the repository root and the blog posts as individual markdown files in the `_posts` folder. One file per post and with minimum or no boilerplate around the actual content.
+* The configuration is managed in a Yaml file `_config.yml` at the repository root
+* The ruby environment used by the jekyll script is defined in a `Gemfile`, which is the standard way to organize ruby dependencies
+* Styling is done by plugins configured in the configuration files. For additional personal adjustments one can override all the html, css or javascript definitions by adding the relevant files to the repository. This way the start is easy (by using a standard style) but one has the full flexibility to adjust every single part of the templates.
+* If you need any dynamic parts, e.g. a comment section, this can also be done by javascript snippets through external services like [staticman](https://staticman.net/). For such things there are typically also jekyll plugins available. Alternatively one can also just add the necessary lines of javascript / html to the page templates.
 
-```bash
-# Install ruby
-sudo pacman -Sy base-devel ruby ruby-bundler
-# Clone the repository
-git clone https://github.com/chr1st1ank/blog.git
-cd clone
-# Install the dependencies from the Gemfile:
-bundle install
+## Publishing the GitOps way
+Now with this set-up, how does the publication process look like and why do I call it the "GitOps" way?
+
+Well, simply because there is nothing else than the git repository. Everything else is automatically handled by the github automation which fetches the writings on every commit, renders the HTML files and updates the blog. You don't have to deploy anything yourself. No software updates are needed and no database needs to be maintained.
+
+### Writing a post
+This is how a blog post is created: I would check out the repository, create a new markdown file `_posts/2020-12-01-Test-Post` and just start writing:
+
+```markdown
+---
+layout: post
+title:  "Test Post"
+description: Short teaser for the main page
+---
+This is a dummy post with a [link](http://wikipedia.org) 
+and many more words...
 ```
 
-The last command installs all the ruby dependencies ("gems") from the Gemfile. This step may take a while because the dependencies are compiled from source code.
+When I'm done, I simply would do `git commit` and `git push` and the post is online.
 
-https://jekyllrb.com/docs/github-pages/
-
-### Configure the blog
-- repository layout
-- configs
-- themes
-- additional features (comments, tags, categories, ...)
-    - tags (clickable)
-    - code snippets
-    - comments via staticman
-
-## Publishing the git-ops way
-- general process: push to main -> webpage
-- updates, database backups
-  - right, none of these are necessary. 
-  - The configuration is code. The content is code.
-- drafts
-- working remotely
-- In theory: colaborating and reviewing
-
-
-## Some subheading
-
-At some point, you’ll want to include images, downloads, or other digital assets along with your text content. One common solution is to create a folder in the root of the project directory called something like assets, into which any images, files or other resources are placed. Then, from within any post, they can be linked to using the site’s root as the path for the asset to include. The best way to do this depends on the way your site’s (sub)domain and path are configured, but here are some simple examples in Markdown:
-
-Including an image asset in a post:
-{% raw %}
-```html
-<ul>
-  {% for post in site.posts %}
-    <li>
-      <a href="{{ post.url }}">{{ post.title }}</a>
-    </li>
-  {% endfor %}
-</ul>
+### Drafts
+There are multiple options for drafts. The built-in functionality of jekyll is to use a special folder `_drafts` instead of `_posts`. This way the draft is only visible when running jekyll with the command line flag `--drafts`. To preview locally the command would be:
+```shell
+bundle exec jekyll server --drafts
 ```
-{% endraw %}
 
-At some point, you’ll want to include images, downloads, or other digital assets along with your text content. One common solution is to create a folder in the root of the project directory called something like assets, into which any images, files or other resources are placed. Then, from within any post, they can be linked to using the site’s root as the path for the asset to include. The best way to do this depends on the way your site’s (sub)domain and path are configured, but here are some simple examples in Markdown.
-
+The approach which I prefer is to create a "feature branch". That means I write the post in a separate git branch, say `test-post`. When I'm done I merge this branch into the "main" branch. This could even be done online via pull request. This would also allow people working together on a blog to establish a review process before publishing. 
 
 
+## Summary
 
 
