@@ -3,22 +3,24 @@ layout: post
 title:  "Hosting a Blog the GitOps Way"
 description: How to set up a blog which is entirely driven and controlled by git. No database, no manual deployments, no manual updates.
 ---
-**Thanks to static site generators a blog can easily be driven and controlled by markdown files in a git repository. This way it is not necessary to set up a content management system including a database ever worrying to end up hosting yet another hacked Wordpress instance. Instead one can focus on the content and publish by simply pushing to the main branch.**
+**Thanks to static site generators, a blog can easily be driven and controlled by markdown files in a git repository. This way, it is not necessary to set up a content management system including a database ever worrying to end up hosting yet another hacked Wordpress instance. Instead one can focus on the content and publish by simply pushing to the main branch.**
 
-In the last couple of years I have been testing many new tools or, packages. Some turned out to be not really beneficial for the purpose I had in mind. But others found a permanent place in my toolbox. I used them more often, recommended them to colleagues and in some cases even created a tutorial or provided a training. Then at some point I realized that such things are worth sharing with a wider community than just the people working behind locked doors of my company. So there must be a blog.
+In the last couple of years I have been testing many new tools or, packages. Some turned out to be not really beneficial for the purpose I had in mind. But others found a permanent place in my toolbox. I used them more often, recommended them to colleagues and in some cases even created a tutorial or provided a training. At some point I decided to share such things with a wider community and create a blog for that, just as many others do it.
 
-But how does one manage a blog these days? I've been experimenting with wordpress and at least one other PHP based content management system years ago. At the time these were good tools. When I did some research for available blog engines or content management systems (CMS), I found out that the seasoned veterans like Wordpress or Drupal are still there. They need a webspace with PHP and a database, of course. Installation means copying the source code. Updating means overwriting the source code in place. This works. I have done it before. Others do it regularly. But I also recall a lot of pain with unsuccessfull updates of similar systems, e.g. Nextcloud. And not updating is not an option because the big CMS systems are well-known for being the target (see e.g. [here](https://www.imperva.com/blog/cms-security-tips/) or [here](https://www.wpwhitesecurity.com/why-malicious-hacker-target-wordpress/)). There are more modern systems, e.g. the nodejs application Ghost. I think this is a really good choice. However it is not so different from the "admin" perspective. It is still a stateful service that needs to be managed. And actually in the recent years I have learned that it is well possible to have the full configuration of any service under version control in a github repository and separate it cleanly from the data. That was what I wanted. And actually I had in mind writing the blog posts in Markdown, so also this could be put under version control and there would basically no data be left. So what for do I need a database then?
+But how does one manage a blog these days? Years ago I had experimented with workpress and other php based content management systems (CMS). At the time these were good tools. When I did some research for available blog engines or CMS, I found out that the seasoned veterans like Wordpress or Drupal are still there. But that would have meant setting up a PHP application including a database. And especially keeping it up-to-date and securing it properly.The big CMS systems are well-known for being a preferred target of hackers (see e.g. [here](https://www.imperva.com/blog/cms-security-tips/) or [here](https://www.wpwhitesecurity.com/why-malicious-hacker-target-wordpress/)). There are more modern systems, e.g. the nodejs application Ghost. I think this is a really good choice. However it is not so different from the "admin" perspective. It is still a stateful service that needs to be managed. 
 
-Inspired by a colleague who suggested to "simply put some markdown files on github" I remembered that there is "github-pages", a feature of github which allows to publish certain content on static websites. We use that often at work to host the documentation rendered from source code. I did some more research on the web and hit a [blog post by Ciaran O'Donnel](https://ciaranodonnell.dev/posts/switching-to-github-io/#what-blog-engines-have-i-tried) which describes very detailed Ciaran's process of choosing a blog engine and how he ended up using github's built-in capabilites. I decided to give it a try.
+In the recent years I have learned that it is well possible to have the full configuration of any service under version control in a github repository and separate it cleanly from the data. And also, that it is possible to do updates via configuration changes and automation, without any manual intervention. That was what I wanted. The blog posts I wanted to write in Markdown, so also this could be put under version control and there would basically no data be left. So what for do I need a database then?
+
+Inspired by a colleague who suggested to "simply put some markdown files on github" I remembered that there is "github-pages", a feature of github which allows to publish certain content on static websites. We use that at work to host the documentation rendered from source code. I did some more research on the web and hit a [blog post by Ciaran O'Donnel](https://ciaranodonnell.dev/posts/switching-to-github-io/#what-blog-engines-have-i-tried) which describes very detailed Ciaran's process of choosing a blog engine and how he ended up using github's built-in static site generator. I decided to give it a try.
 
 ## Static site generators
 So, what is a static site generator? A classical dynamic web page generates the website on client request. It compiles static pieces like for example HTML templates, server-side includes and database fields as well as dynamic snippets generated by a scripting language such as PHP into the final web page which is delivered to the webbrowser. In contrast, a static site generator does this already ahead of time. It introduces an additional build step as part of the deployment process and pre-generates all possible views of the web page, so that the web server only has to deliver static content.
 
-I can remember static site generators from my first experiences with website creation in the late ninetees and early 2000s. Back then HTML editors like Frontpage and Dreamweaver were an alternative to writing HTML by hand. They promised a what-you-see-is-what-you-get experience. I found them rather unwieldy, they never did exactly what I wanted. Instead of getting "what I saw", the generated HTML markup often contained a lot of autogenerated garbage that often looked completely different from browser to browser. But the main drawback with static sites in general was, that it wasn't possible at first to have dynamic components in it. For example if you needed a login, or an e-mail or guestbook form, it has always been necessary to have some server side code running anyways. Therefore I soon switched to handcrafting the HTML and using something like PHP to render all pages into the same templates.
+I can remember another form of static site generators from my first experiences with website creation in the late ninetees and early 2000s. Back then HTML editors like Frontpage and Dreamweaver were an alternative to writing HTML by hand. They promised a what-you-see-is-what-you-get experience. I found them rather unwieldy, they never did exactly what I wanted. Instead of getting "what I saw", the generated HTML markup often contained a lot of autogenerated garbage that often looked completely different from browser to browser. But the main drawback with static sites in general was, that it wasn't possible at first to have dynamic components in it. For example if you needed a login, an e-mail form or a guestbook page, it was always necessary to have some server side code running anyways. Therefore I soon switched to handcrafting the HTML and using something like PHP to render all pages into the same templates.
 
-With the increasing use of RESTfull webservices together with more and more powerful client-side scripting, the main disadvantage of static pages has become meaningless for content sites. Of course for complex web applications like web shops, server side scripting is probably still the way to go. But for pages which mainly deliver static content like text and images with some dynamic add-ons it really isn't necessary any longer to generate pages dynamically. One can load all the dynamic parts via Javascript from dedicates services, so that a static HTML page with a little bit of embedded Javascript does the job very well.
+With the increasing use of RESTful webservices together with more and more powerful client-side scripting, the main disadvantage of static pages has become meaningless for content sites. Of course for complex web applications like web shops, server side scripting is probably still the way to go. But for pages which mainly deliver static content like text and images with some dynamic add-ons it really isn't necessary any longer to generate pages dynamically. One can load all the dynamic parts via Javascript from dedicates services, so that a static HTML page with a little bit of embedded Javascript does the job very well.
 
-So a newer kind of static site generators has evolved, addressing the needs of developers better than the classic tools. Some examples of this are [Jekyll](https://jekyllrb.com/), [Middleman](http://middlemanapp.com/) or [Hugo](http://gohugo.io/). With these one can prepare the templates as plain HTML/CSS/Javascript files while the content is typically written as plain text files in Markdown. This allows to keep the content completely under version control, similar to source code. When the text is written, the site generator compiles the markdown files into HTML and you only need a static webserver to deliver the content. No database is needed and no security issues with server-side scripting languages can occur.
+So a newer kind of static site generators has evolved, addressing the needs of developers better than the classic tools. Some examples of this are [Jekyll](https://jekyllrb.com/), [Middleman](http://middlemanapp.com/) or [Hugo](http://gohugo.io/). With these, one can prepare the templates as plain HTML/CSS/Javascript files, while the content is typically written as plain text files in Markdown. This allows to keep the content completely under version control, similar to source code. When the text is written, the site generator compiles the markdown files into HTML and you only need a static webserver to deliver the content. No database is needed and no security issues with server-side scripting languages can occur.
 
 ## Setting up a blog with Github-pages and Jekyll
 Github offers the option to serve static websites via the built-in service "github-pages". If you tell a github repository your own you can configure github-pages to create a web page from the contents of a certain folder or git branch. Per default the static site generator jekyll is used to render the contents. This setup already offers enough functionality for something simple as a blog.
@@ -27,31 +29,35 @@ I am not going to detail out how to set up a page with Jekyll. There are loads o
 
 In essence, the result looks as follows:
 
-* The actual text is written in markdown files. So the main page will end up in an `index.md` at the repository root and the blog posts as individual markdown files in the `_posts` folder. One file per post and with minimum or no boilerplate around the actual content.
-* The configuration is managed in a Yaml file `_config.yml` at the repository root
+* The actual **text is written in markdown** files. So the main page will end up in an `index.md` at the repository root and the blog posts as individual markdown files in the `_posts` folder. One file per post and with minimum or no boilerplate around the actual content.
+* The **configuration** is managed in a Yaml file `_config.yml` at the repository root
 * The ruby environment used by the jekyll script is defined in a `Gemfile`, which is the standard way to organize ruby dependencies
-* Styling is done by plugins configured in the configuration files. For additional personal adjustments one can override all the html, css or javascript definitions by adding the relevant files to the repository. This way the start is easy (by using a standard style) but one has the full flexibility to adjust every single part of the templates.
+* **Styling** is done by plugins configured in the configuration files. For additional personal adjustments one can override all the html, css or javascript definitions by adding the relevant files to the repository. This way the start is easy (by using a standard style) but one has the full flexibility to adjust every single part of the templates.
 * If you need any dynamic parts, e.g. a comment section, this can also be done by javascript snippets through external services like [staticman](https://staticman.net/). For such things there are typically also jekyll plugins available. Alternatively one can also just add the necessary lines of javascript / html to the page templates.
 
-## Publishing the GitOps way
-Now with this set-up, how does the publication process look like and why do I call it the "GitOps" way?
+This way, one can manage the configuration and styling together with the content in a git repository. Github provides a build process and a webserver where the rendered results are made available.
 
-Well, simply because there is nothing else than the git repository. Everything else is automatically handled by the github automation which fetches the writings on every commit, renders the HTML files and updates the blog. You don't have to deploy anything yourself. No software updates are needed and no database needs to be maintained.
+## Publishing the GitOps way
+Now with this set-up, how does the publication process look like and why do I call it "the GitOps way"?
+
+Well, simply because there is nothing else than the git repository. Everything else is automatically handled by the github automation which fetches the writings on every commit, renders the HTML files and updates the blog. You don't have to deploy anything yourself. No software updates are needed and no database needs to be maintained. So if you host such a page on github, this is very convenient. Of course one could achieve the same result with another CI/CD service and some web space. This would just be a little more work.
 
 ### Writing a post
-This is how a blog post is created: I would check out the repository, create a new markdown file `_posts/2020-12-01-Test-Post` and just start writing:
+This is how a blog post is created: I would check out the repository, create a new markdown file (e.g. `_posts/2020-12-01-Test-Post`) and just start writing:
 
 ```markdown
 ---
 layout: post
 title:  "Test Post"
-description: Short teaser for the main page
+description: Short summary for the main page
 ---
 This is a dummy post with a [link](http://wikipedia.org) 
 and many more words...
 ```
 
-When I'm done, I simply would do `git commit` and `git push` and the post is online.
+You see that the markdown file has a little header, defining the page layout (one of the pre-defined or custom templates). Also with the extensions I'm using one can define the title and a short summary of the post. These things can be shown for example in the list of recent posts on the main page. The rest of the file is plain Markdown.
+
+When I'm done, I simply do `git commit` and `git push` and the post is online.
 
 ### Drafts
 There are multiple options for drafts. The built-in functionality of jekyll is to use a special folder `_drafts` instead of `_posts`. This way the draft is only visible when running jekyll with the command line flag `--drafts`. To preview locally the command would be:
@@ -61,7 +67,8 @@ bundle exec jekyll server --drafts
 
 The approach which I prefer is to create a "feature branch". That means I write the post in a separate git branch, say `test-post`. When I'm done I merge this branch into the "main" branch. This could even be done online via pull request. This would also allow people working together on a blog to establish a review process before publishing. 
 
+### Working remotely
+Because github offers support for markdown files out-of-the-box, there is no need for a local environment. One can also write directly on the github web page from any device. Of course the preview is not full-featured then. The only difference is that the preview is in the github style instead of the final jekyll theme.
 
 ## Summary
-
 
