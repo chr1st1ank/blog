@@ -30,4 +30,4 @@ jobs:
         password: ${{ secrets.DEPLOY_PW }}
         protocol: ftps
         port: 21
-        local-dir: ./_site
+        local-dir: ./_site/
