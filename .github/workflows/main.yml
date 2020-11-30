@@ -1,6 +1,5 @@
-# This is a basic workflow to help you get started with Actions
-
-name: Publish
+# Publish the blog post
+name: main
 
 # Controls when the action will run. 
 on:
@@ -15,13 +14,13 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  web-deploy:
-    name: 🎉 Deploy
+  publish:
+    name: 📖 Publish
     runs-on: ubuntu-latest
     steps:
-    - name: 🚚 Get latest code
+    - name: 🚚 Checkout
       uses: actions/checkout@v2.3.2
-    - name: Build
+    - name: 🏗 Jekyll build
       uses: jerryjvl/jekyll-build-action@v1
     - name: 📂 Sync files
       uses: SamKirkland/FTP-Deploy-Action@4.0.0
