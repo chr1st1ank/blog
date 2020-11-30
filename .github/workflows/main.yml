@@ -31,3 +31,4 @@ jobs:
         protocol: ftps
         port: 21
         local-dir: ./_site/
+        server-dir: /
