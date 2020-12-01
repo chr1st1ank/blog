@@ -4,7 +4,7 @@ title: About
 # permalink: /about/
 ---
 
-![Christian Krudewig](/assets/images/profile.png)
+![Christian Krudewig]({% link assets/images/profile.png %})
 
 Welcome to my personal blog!
 
