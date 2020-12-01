@@ -1,7 +1,5 @@
-# Publish the blog post
 name: main
 
-# Controls when the action will run. 
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
@@ -12,7 +10,6 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   publish:
     name: 📖 Publish
@@ -23,12 +20,10 @@ jobs:
     - name: 🏗 Jekyll build
       uses: jerryjvl/jekyll-build-action@v1
     - name: 📂 Sync files
-      uses: SamKirkland/FTP-Deploy-Action@4.0.0
+      uses: sebastianpopp/ftp-action@v2.0.0
       with:
-        server: ${{ secrets.DEPLOY_HOST }}
-        username: ${{ secrets.DEPLOY_USER }}
+        host: ${{ secrets.DEPLOY_HOST }}
+        user: ${{ secrets.DEPLOY_USER }}
         password: ${{ secrets.DEPLOY_PW }}
-        protocol: ftps
-        port: 21
-        local-dir: ./_site/
-        server-dir: /
+        localDir: "./_site/"
+        forceSsl: true
