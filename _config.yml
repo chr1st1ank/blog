@@ -4,6 +4,7 @@ description: Tutorials, stories and insights about software engineering, machine
 github_username: chr1st1ank
 repository: chr1st1ank/blog
 github_repo: blog
+baseurl: https://blog.krudewig-online.de
 # No link to twitter etc.:
 social_link: dot
 social_username: 
