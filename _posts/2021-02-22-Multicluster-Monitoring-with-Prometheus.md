@@ -4,11 +4,11 @@ title:  "Multicluster Application Monitoring with Prometheus"
 description: How to centralize the monitoring of Kubernetes applications running in different environments with Prometheus.
 ---
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-<script>mermaid.initialize({startOnLoad:true});</script>
+<script>mermaid.initialize({startOnLoad:true, theme:"neutral"});</script>
 
-**[Prometheus](https://prometheus.io/) is a popular choice for monitoring applications. It is easy to set up and can be deployed alongside the applications inside a Kubernetes cluster. However, when you cannot run your main Prometheus instance within the same cluster it becomes a bit more tricky. On the job we recently set up Prometheus monitoring for an API which is deployed to independent kubernetes clusters in different regions. In this post I will show how to combine the metrics of applications running in separate Kubernetes clusters.**
+**[Prometheus](https://prometheus.io/) is a popular choice for application monitoring. It is easy to set up and can be deployed alongside the applications inside a Kubernetes cluster. However, when you cannot run your main Prometheus instance within the same cluster it becomes a bit more tricky. At work we recently set up Prometheus monitoring for a web service which is deployed to independent kubernetes clusters in different regions. The official documentation is a bit sparce on this topic. In this post I will show what I learned about combining the metrics of applications running in separate Kubernetes clusters.**
 
-In contrast to other monitoring systems, Prometheus follows a pull workflow. The monitoring targets have to expose their metrics on an HTTP endpoint where Prometheus can "scrape" the data at its own pace. This is typically done by modules called ["exporters"](https://prometheus.io/docs/instrumenting/exporters/), e.g. the node exporter for system metrics. So including a visualization tool [Grafana](https://grafana.com/) which is often used to create dashboards the setup looks like this:
+In contrast to other monitoring systems, Prometheus follows a pull workflow. The monitoring targets have to expose their metrics on an HTTP endpoint where Prometheus can "scrape" the data at its own pace. This is typically done by modules called ["exporters"](https://prometheus.io/docs/instrumenting/exporters/), e.g. the "node exporter" for system metrics. So including the visualization tool [Grafana](https://grafana.com/) which is often used to create dashboards the setup looks like this:
 
 <div class="mermaid">
 graph LR;
@@ -34,12 +34,12 @@ global:
   scrape_interval: 15s
   scrape_timeout: 15s
   evaluation_interval: 15s
+  scrape_timeout: 10s
+
 scrape_configs:
 - job_name: example-api
   honor_labels: true
   honor_timestamps: true
-  scrape_interval: 15s
-  scrape_timeout: 15s
   metrics_path: /metrics
   scheme: https
   static_configs:
@@ -53,13 +53,22 @@ scrape_configs:
 ## Monitoring a Kubernetes deployment
 For an application hosted as a "deployment" object on Kubernetes the same approach still works. We can expose the metrics as HTTP endpoint and let Prometheus scrape it. However, one needs to take care to *point Prometheus to the endpoint in every Kubernetes pod and not to access it via an ingress route* and service object, i.e. not via the outward facing url as in the first example above. This is because it might be that multiple replicas of the pod exist. Even if that's not the case in normal operation there might e.g. be an old and a new version during a rolling update. Every pod then only serve some of the requests and with every scraping action Prometheus would get routed to a different pod. Everytime it would see the metrics of another one of the replicas and the numbers would be inconsitent and unusable.
 
-To avoid this problem, Prometheus provides service discovery functionality for Kubernetes, the [kubernetes_sd_config module](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config). This module accesses the Kubernetes API to discover the pod objects and their IP addresses. Because these IP addresses are only reachable inside the Kubernetes cluster, Prometheus also needs to be run inside the cluster for this.
+To avoid this problem, Prometheus provides service discovery functionality for Kubernetes, the [kubernetes_sd_config module](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config). This module accesses the Kubernetes API to discover the pod objects and their IP addresses. Because these IP addresses are only reachable inside the Kubernetes cluster, Prometheus also needs to be run inside the cluster for this. With service discovery we get a setup as follows:
+<div class="mermaid">
+graph LR;
+Prometheus
+Prometheus -- discover Pods --> k8s(Kubernetes API)
+app1(Exporter <br/> Pod 1)
+app2(Exporter <br/> Pod 2)
+Prometheus -- pull metrics --> app1 & app2
+</div>
 
-The following listing shows a configuration for Prometheus which scrapes the `/metrics` endpoint of all podswith a certain label (`application=example-api`) in the namespace `example-api-prod` in the same cluster. The name of the pod is added as additional label. Here I excluded network port 9443 from scraping, because the same metrics endpoint was also provided under a different port. Prometheus creates one scraping target per pod and exposed network port, so values would be duplicated.
+The following listing shows a configuration for Prometheus which scrapes the `/metrics` endpoint of all pods with a certain label (`application=example-api`) in the namespace `example-api-prod` in the same cluster. The name of the pod is added as additional label. Here I excluded network port 9443 from scraping, because the same metrics endpoint was also provided under a different port. Prometheus creates one scraping target per pod and exposed network port, so values would be duplicated.
 ```yaml
 global:
-  scrape_interval: 15s # By default, scrape targets every 15 seconds.
-  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  evaluation_interval: 15s
   scrape_timeout: 10s
 
 scrape_configs:
@@ -157,12 +166,12 @@ spec:
 ```
 
 After deploying this and creating a port forwarding, we can browse the metrics in the Prometheus UI:
-```shell
+```
 kubectl apply -f prometheus.yaml
 kubectl port-forward prometheus-765d459796-258hz 9090:9090
 ```
 
-Note that with this configuration the data does not survive a container recreation, because I used an "emptyDir", a temporary directory as data volume. This only makes sense when this Prometheus instance just serves as a relay for some central instance as described in the next section. 
+Note that with this configuration the data does not survive a container recreation, because I used an "emptyDir", a temporary directory, as data volume. This only makes sense when this Prometheus instance just serves as a relay for some central instance as described in the next section. But with this setup we could even deploy it as a "Deployment" instead of a "StatefulSet".
 
 ## Centralizing monitoring across clusters
 Ok, now we have a working Prometheus inside our kubernetes cluster which collects all the metrics of the locally running services. But what if we have multiple clusters, for example in separate regions? Or if we have a central Prometheus instance outside of the cluster and want to relay our data to it?
@@ -180,7 +189,7 @@ remote2(Prometheus Spoke 2) -- pull metrics --> app3
 central -- pull metrics --> remote1 & remote2
 </div>
 
-In order to get this concept practically working we can add a service and an ingress route in our kubernetes setup which exposes the built-in `/federate` endpoint. This endpoint provides access to all the metrics
+In order to get this concept practically working we can add a service and an ingress route in our kubernetes setup which exposes the built-in `/federate` endpoint. This endpoint provides access to all the metrics.
 
 ```yaml
 apiVersion: v1
@@ -227,9 +236,9 @@ spec:
             port:
               number: 80
 ```
-*Note: You will want to add TLS encryption and probably also authentication, so that the federate endpoint and the metrics are not exposed to the internet. In kubernetes this job can be taken by the ingress controller. However, I'm leaving this out here, because there are different implementations of Ingress controllers whith differing configuration syntax. See for example the [documentation of the nginx ingress controller](https://kubernetes.github.io/ingress-nginx/examples/auth/client-certs/).*
+*Note: You will want to add TLS encryption and probably also authentication, so that the federate endpoint and the metrics are not exposed to the internet. In kubernetes this job can be taken by the ingress controller. I'm leaving this out here, because there are different implementations of Ingress controllers whith differing configuration syntax and this is not the focus of this blog post. See for example the [documentation of the nginx ingress controller](https://kubernetes.github.io/ingress-nginx/examples/auth/client-certs/).*
 
-Now we can configure an external Prometheus instance to scrape the metrics from the federated instance. The configuration for Prometheus looks as if it was a normal metrics endpoint:
+Now we can configure an external Prometheus instance to scrape the metrics from the federated instance. The configuration for Prometheus looks as if it was a normal metrics endpoint. Only we add a `match[]` argument which selects the scraping targets which should be pulled from the federated Prometheus instance:
 ```yaml
 global:
   scrape_interval: 15s
@@ -242,7 +251,6 @@ scrape_configs:
   params:
     match[]:
     - '{job!=""}'
-    - '{__name__=~"job:.*"}'
   scrape_interval: 15s
   scrape_timeout: 15s
   metrics_path: /federate
@@ -261,4 +269,4 @@ Now the central Prometheus server and possibly the Grafana dashboards have acces
 
 ## Summary
 
-With the setup described above it is possible to monitor applications running in remote kubernetes clusters with a central Prometheus instance. The official documentation about this is a bit scarce, why it took me a while to find this approach. But with the steps explained here it is very simple to set up this monitoring system in a reliable manner. I hope this helps and you spread the word.
+With the setup described above it is possible to monitor applications running in remote kubernetes clusters with a central Prometheus instance. The official documentation about this is a bit scarce, why it took us a while to find this approach. But with the steps explained here it is very simple to set up this monitoring system in a reliable manner. I hope this helps and you spread the word.
