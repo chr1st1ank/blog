@@ -5,6 +5,7 @@ github_username: chr1st1ank
 repository: chr1st1ank/blog
 github_repo: blog
 url: https://blog.krudewig-online.de
+baseurl: ""
 # No link to twitter etc.:
 social_link: dot
 social_username: 
