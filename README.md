@@ -25,4 +25,6 @@ The last command installs all the ruby dependencies ("gems") from the Gemfile. T
 
 For local development do one of the following:
 - Build the static pages: `bundle exec jekyll build`
-- Serve the pages on a local webserver: `bundle exec jekyll serve -b /`
+- Serve the pages on a local webserver: `bundle exec jekyll serve -P 4000`
+
+In the latter case the result is available at http://localhost:4000/
