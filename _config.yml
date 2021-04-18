@@ -26,3 +26,4 @@ exclude:
   - ".metals/metals.lock.db"
   - ".config/"
   - "README.md"
+  - "code/"
