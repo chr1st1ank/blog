@@ -1,6 +1,6 @@
 # blog
 
-My personal blog hosted on (blog.krudewig-online.de)
+My personal blog about software engineering hosted on [blog.krudewig-online.de](blog.krudewig-online.de).
 
 ## Setting up jekyll locally
 

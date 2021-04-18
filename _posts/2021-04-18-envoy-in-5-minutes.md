@@ -34,7 +34,7 @@ services:
 
 So here are two services. `envoy` which is our sidecar proxy and `api` which is a simplistic Python API simulating a machine learning service. The API is a small dummy service with two endpoints: `/health` and `/calculate`. The goal is to make the API only accessible through Envoy, so that we can leverage all its nice features to make the API bulletproof.
 
-If you want to test it, just get the [example files from github](https://github.com/chr1st1ank/blog/code/2021-04-15-envoy-in-5-minutes) and type `docker-compose up`.
+If you want to test it, just get the [example files from github](https://github.com/chr1st1ank/blog/tree/main/code/2021-04-15-envoy-in-5-minutes) and type `docker-compose up`.
 
 ## The structure of an Envoy configuration
 Envoy is configured with a big, nested YAML file. It follows a very logical structure, but is very overwhelming at first, so that it needs some excercise to get used to it. The basic structure is as follows:
@@ -143,12 +143,12 @@ If the webservice has backends itself (e.g. a database) there are more useful th
 - Failover
 - Client side load balancing
 
-These things can all be plugged in as additional configuration options. You may follow the many examples of the (official documentations)[https://www.envoyproxy.io/docs/envoy/latest/]. With a working setup as a starting point this should be no longer a problem.
+These things can all be plugged in as additional configuration options. You may follow the many examples of the [official documentation](https://www.envoyproxy.io/docs/envoy/latest/). With a working setup as a starting point this should be no longer a problem.
 
 ## Summary and further reading
 
 I hope the explanations help a bit to demystify how envoy is configured. Envoy's flexibility comes for the price of complexity in the configuration. But I believe with a working example and some explanations one can go up the learning curve quite steeply. The key points are to distinguish between the "listener" and "clusters" section and to understand the idea of "filters" as a chain of plugins which are used to process a request step by step.
-The complete source code is [available on github](https://github.com/chr1st1ank/blog/code/2021-04-15-envoy-in-5-minutes) for easier access.
+The complete source code is [available on github](https://github.com/chr1st1ank/blog/tree/main/code/2021-04-15-envoy-in-5-minutes) for easier access.
 
 If you'd like to get it explained verbally I can recommend a very good [intro video by Nic Jackson](https://youtu.be/D0cuv1AEftE).
 If you want to get a quick overview of useful features, there is TR Jordan's [Guide to envoy's backpressure](https://blog.turbinelabs.io/a-guide-to-envoys-backpressure-22eec025ef04). And at last it is definitely also a good idea to read the official [Architecture overview](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/arch_overview) in the envoy documentation.
