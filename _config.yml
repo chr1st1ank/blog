@@ -22,6 +22,9 @@ kramdown:
   hard_wrap: false
   syntax_highlighter: rouge
 
+plugins:
+  - jekyll-sitemap
+
 exclude: 
   - ".metals/metals.lock.db"
   - ".config/"
