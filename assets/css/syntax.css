@@ -9,3 +9,6 @@ pre {
 .h0 {
     font-size: 96px;
 }
+blockquote em {
+    font-size: 50%;
+}
