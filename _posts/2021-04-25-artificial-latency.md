@@ -158,7 +158,7 @@ This is not a theoretic problem. It happens in practice very fast because produc
 Because on client side there is typically some timeout our API does not know about. If a client times out and aborts the request he cannot tell the API about it. So the API will even process requests when the client has long since stopped listening.
 
 The following chart shows the development of response times and throughput depending on the number of clients:
-<div id="myDiv"  style="width:80%;"></div>
+<div id="chart-unrestricted-api"  style="width:80%;"></div>
 <script>
 var throughput = {
   x: [1, 2, 3, 4, 5],
@@ -190,51 +190,56 @@ var layout = {
   }
 };
 var options = {displayModeBar: false}
-Plotly.newPlot(document.getElementById('myDiv'), data, layout, options);
+Plotly.newPlot(document.getElementById('chart-unrestricted-api'), data, layout, options);
 </script>
 
 We can see that the response time increases linearly with the number of concurrent clients. The throughput from server perspective is always the same. But the throughput from the perspective of a client with timeout drops to zero as soon as the response time is above the timeout threshold. This means that the service is practically offline although it is responding to requests at full speed.
 
 ## Load shedding to the rescue
-
-### Option 1: Limit queue length
-One of the very few options the API has to handle the situation is load shedding. This means it can serve as many requests as possible and refuse the others immediately instead of creating a queue.
+One of the very few options the API has to handle the situation is load shedding. This means it can serve as many requests as possible and dismiss the others immediately instead of creating a long queue.
 
 To achieve this in Python we need a subprocess for the blocking calculation, so that the main process can manage a queue and reject connections if necessary.
+### Option 1: Limited queue length
+The first option to solve this is an explicit queue with limited length. 
+
+To model the queue an asyncio.Semaphore object  can be used. The actual executions can be done in a ProcessPoolExecutor. This has the nice side effect that we can also use multiple workers to achieve a higher throughput on multiple CPUs if we whish to. Both objects are initialized in the `on_startup()` function which is executed on application startup. The objects are stored in the `app.state` attribute. As asyncio is single-threaded we don't have to worry about thread-safety here.
+
+In the actual API endpoint we can use the semaphore's `locked()` function to check if the queue is already full. In this case we can immediately return an error code to the client. In all other cases we call the process pool for the calculation asyncronously.
 ```python
-# TODO: Implementation with load shedding
+import asyncio
+import concurrent
+import hashlib
+from timeit import default_timer as timer
+
+from fastapi import FastAPI, Response
+
+app = FastAPI()
+
+
+def calculate(input: str, timeout=0.5):
+    # unchanged...
+
+@app.on_event("startup")
+async def on_startup():
+    workers = 1
+    queue_length = 2
+    app.state.pool = concurrent.futures.ProcessPoolExecutor(max_workers=workers)
+    app.state.semaphore = asyncio.Semaphore(queue_length)
+
+@app.get("/calculate")
+async def get_calculate(input: str, response: Response):
+    if app.state.semaphore.locked():
+        response.status_code = 503
+        return {"error": "Too many requests"}
+    async with app.state.semaphore:
+        loop = asyncio.get_running_loop()
+        x = await loop.run_in_executor(app.state.pool, calculate, input, 0.5)
+        return {"result": x}
 ```
-We use a process pool for the calculation subprocess and a semaphore object...
 
+If we run a performance test on this now we can see that not a single request runs into a timeout anymore. The successful requests are processed within a reasonable time and the others get a 503 error immediately:
 ```shell
-> bombardier -c 1 -d 30s -t 10s --latencies 'localhost:8088/calculate?input=test'
-Bombarding http://localhost:8088/calculate?input=test for 30s using 1 connection(s)
-[==========================================================================================] 30s
-Done!
-Statistics        Avg      Stdev        Max
-  Reqs/sec         1.98       9.60      65.52
-  Latency      503.47ms     1.91ms   517.80ms
-  Latency Distribution (Total)
-     50%   503.18ms
-     75%   503.29ms
-     90%   503.51ms
-     95%   503.78ms
-     99%   505.73ms
-  Latency Distribution (2xx)
-     50%   503.18ms
-     75%   503.29ms
-     90%   503.51ms
-     95%   503.78ms
-     99%   505.73ms
-  HTTP codes:
-    1xx - 0, 2xx - 60, 3xx - 0, 4xx - 0, 5xx - 0
-    others - 0
-  Throughput:     564.06/s
-```
-
-
-```shell
-> bombardier -c 4 -d 30s -t 10s --latencies 'localhost:8088/calculate?input=test'
+> bombardier -c 4 -d 30s -t 2s --latencies 'localhost:8088/calculate?input=test'
 Bombarding http://localhost:8088/calculate?input=test for 30s using 4 connection(s)
 [==========================================================================================] 30s
 Done!
@@ -257,60 +262,161 @@ Statistics        Avg      Stdev        Max
     1xx - 0, 2xx - 61, 3xx - 0, 4xx - 0, 5xx - 52881
     others - 0
   Throughput:   428.57KB/s
-
-> bombardier -c 2 -d 30s -t 10s --latencies 'localhost:8088/calculate?input=test'
-Bombarding http://localhost:8088/calculate?input=test for 30s using 2 connection(s)
-[==========================================================================================] 30s
-Done!
-Statistics        Avg      Stdev        Max
-  Reqs/sec         1.97       9.55      52.50
-  Latency         0.99s    62.83ms      1.01s
-  Latency Distribution (Total)
-     50%      1.00s
-     75%      1.00s
-     90%      1.00s
-     95%      1.00s
-     99%      1.00s
-  Latency Distribution (2xx)
-     50%      1.00s
-     75%      1.00s
-     90%      1.00s
-     95%      1.00s
-     99%      1.00s
-  HTTP codes:
-    1xx - 0, 2xx - 61, 3xx - 0, 4xx - 0, 5xx - 0
-    others - 0
-  Throughput:     567.61/s
-
-
-> bombardier -r 50 -c 5 -d 30s -t 10s --latencies 'localhost:8088/calculate?input=test'
-Bombarding http://localhost:8088/calculate?input=test for 30s using 5 connection(s)
-[==========================================================================================] 30s
-Done!
-Statistics        Avg      Stdev        Max
-  Reqs/sec        49.86      16.75     101.01
-  Latency       41.07ms   192.78ms      1.00s
-  Latency Distribution (Total)
-     50%     0.98ms
-     75%     1.23ms
-     90%     1.48ms
-     95%     2.13ms
-     99%      1.00s
-  Latency Distribution (2xx)
-     50%      0.99s
-     75%      1.00s
-     90%      1.00s
-     95%      1.00s
-     99%      1.00s
-  HTTP codes:
-    1xx - 0, 2xx - 61, 3xx - 0, 4xx - 0, 5xx - 1440
-    others - 0
-  Throughput:    12.21KB/s
-
 ```
 
-### Option 2: Estimate waiting time
-Use dequeue
+The following chart shows the development of response times and throughput depending on the number of clients:
+<div id="chart-queue-limit"  style="width:80%;"></div>
+<script>
+var throughput = {
+  x: [1, 2, 3, 4, 5],
+  y: [2.00, 2.03, 2.03, 2.03, 2.03],
+  type: 'scatter',
+  name: 'Throughput (successful requests, req/s)'
+};
+var responseTime = {
+  x: [1, 2, 3, 4, 5],
+  y: [0.503, 1.00, 1.00, 1.00, 0.99],
+  type: 'scatter',
+  name: 'Response time of successful requests (p50 in s)',
+  secondary_y: true
+};
+var data = [responseTime, throughput];
+var layout = {
+  title: 'Throughput and response times with limited queue',
+  xaxis: {
+    title: 'Clients',
+    showgrid: false,
+    zeroline: false,
+    nticks: 5
+  }
+};
+var options = {displayModeBar: false}
+Plotly.newPlot(document.getElementById('chart-queue-limit'), data, layout, options);
+</script>
+
+So that's just what we want. Under overload our service keeps laboring under full load. But requests which exceed the capacity are directly refused, so that the client application doesn't have to wait unnecessarily and the response time stays low.
+
+### Option 2: Limited response time
+The approach above is very effective. The only disadvantage is that we can only set a specific queue length, we cannot define a certain target response time. However, this is also not much more complicated. One approach is to track the response times and the queue length so that the response time for every new request can be estimated. So once can decide on this estimate whether a request should be refused.
+
+The following listing introduces `MovingAverageEstimator`, a small class which tracks the last few observed times in a deque container. The average of these obervations is then provided as estimate. Another small class introduced is `ResponseTimeLimiter`, a wrapper around the `ProcessPoolExecutor` we already had before. This replaces the Semaphore. The `ResponseTimeLimiter` measures the response times and the queue length, so that it can always tell if the next function call would be processed within a certain maximum time or not.
+
+```python
+import asyncio
+import concurrent
+import hashlib
+from collections import deque
+from timeit import default_timer as timer
+from uuid import uuid4 as generate_request_id
+
+from fastapi import FastAPI, Response
+
+app = FastAPI()
+
+
+class MovingAverageEstimator:
+    """Class to calculate a moving average of n observations"""
+    def __init__(self, n_obervations: int=3):
+        self.n_obervations = n_obervations
+        self.observations = deque()
+
+    def add_observation(self, new_time: float):
+        if len(self.observations) + 1 > self.n_obervations:
+            self.observations.popleft()
+        self.observations.append(new_time)
+
+    def get_estimate(self):
+        if not self.observations:
+            return 0
+        return sum(self.observations) / len(self.observations)
+
+
+class ResponseTimeLimiter:
+    """Function executor with time tracking"""
+    def __init__(self, n_workers):
+        self.n_workers = n_workers
+        self.worker_pool = concurrent.futures.ProcessPoolExecutor(max_workers=n_workers)
+        self.n_active = 0
+        self.last_start = timer()
+        self.time_estimator = MovingAverageEstimator(3)
+
+    def can_process_in(self, max_time):
+        """Returns true if the next function call can be processed within max_time"""
+        if self.n_active >= self.n_workers:
+            expected_time = self.time_estimator.get_estimate() * (self._calculations_to_await() + 1)
+            print(f"{self.n_active=}, {expected_time=}")
+            if expected_time > max_time:
+                return False
+        else:
+            print(f"{self.n_active=}, expected_time={self.time_estimator.get_estimate()}")
+        return True
+
+    def _calculations_to_await(self):
+        """Number of calculations until a newly arriving one would start"""
+        return max(0, self.n_active / self.n_workers - 0.5)
+
+    async def run_function(self, f, *args):
+        """Call function f with the given arguments asynchronously and track the execution time."""
+        loop = asyncio.get_running_loop()
+        arrival_time = timer()
+        queue_length = self._calculations_to_await()
+        self.n_active += 1
+        x = await loop.run_in_executor(self.worker_pool, f, *args)
+        self.n_active -= 1
+        self.time_estimator.add_observation((timer() - arrival_time) / (queue_length + 1))
+        return x
+
+
+def calculate(input: str, timeout=0.5):
+    # unchanged
+
+
+@app.on_event("startup")
+async def on_startup():
+    app.state.response_time_limiter = ResponseTimeLimiter(n_workers=1)
+
+
+@app.get("/calculate")
+async def get_calculate(input: str, response: Response):
+    if not app.state.response_time_limiter.can_process_in(1.5):
+        response.status_code = 503
+        return {"error": "Too many requests"}
+        
+    x = await app.state.response_time_limiter.run_function(
+        calculate, input, 0.5
+    )
+
+    return {"result": x}
+```
+
+The endpoint function `get_calculate` now uses the `ResponseTimeLimiter` to decide whether to refuse the request if it can't be processed within a limit of 1.5 seconds. 
+
+
+```shell
+> bombardier -c 4 -d 30s -t 10s --latencies 'localhost:8088/calculate?input=test'
+Bombarding http://localhost:8088/calculate?input=test for 30s using 4 connection(s)
+[=================================================================================================================================================] 30s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec      1500.79     281.08    2035.72
+  Latency        2.66ms    32.44ms      1.01s
+  Latency Distribution (Total)
+     50%     1.28ms
+     75%     1.66ms
+     90%     2.12ms
+     95%     2.75ms
+     99%     4.73ms
+  Latency Distribution (2xx)
+     50%      1.00s
+     75%      1.00s
+     90%      1.01s
+     95%      1.01s
+     99%      1.01s
+  HTTP codes:
+    1xx - 0, 2xx - 60, 3xx - 0, 4xx - 0, 5xx - 44965
+    others - 0
+  Throughput:   369.85KB/s
+```
 
 ## Summary
 

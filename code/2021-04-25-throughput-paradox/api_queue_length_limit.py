@@ -32,13 +32,8 @@ async def on_startup():
     app.state.semaphore = asyncio.Semaphore(queue_length)
 
 
-@app.on_event("shutdown")
-async def on_shutdown():
-    app.state.pool.shutdown()
-
-
 @app.get("/calculate")
-async def get_calculate_limited(input: str, response: Response):
+async def get_calculate(input: str, response: Response):
     if app.state.semaphore.locked():
         response.status_code = 503
         return {"error": "Too many requests"}
