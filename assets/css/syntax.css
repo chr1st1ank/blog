@@ -12,3 +12,6 @@ pre {
 blockquote em {
     font-size: 50%;
 }
+p a {
+    color: #447fcf;
+}

@@ -148,7 +148,7 @@ These things can all be plugged in as additional configuration options. You may 
 ## Summary and further reading
 
 I hope the explanations help a bit to demystify how envoy is configured. Envoy's flexibility comes for the price of complexity in the configuration. But I believe with a working example and some explanations one can go up the learning curve quite steeply. The key points are to distinguish between the "listener" and "clusters" section and to understand the idea of "filters" as a chain of plugins which are used to process a request step by step.
-The complete source code is [available on github](https://github.com/chr1st1ank/blog/tree/main/code/2021-04-15-envoy-in-5-minutes) for easier access.
+The complete [source code is available on github](https://github.com/chr1st1ank/blog/tree/main/code/2021-04-15-envoy-in-5-minutes) for easier access.
 
 If you'd like to get it explained verbally I can recommend a very good [intro video by Nic Jackson](https://youtu.be/D0cuv1AEftE).
 If you want to get a quick overview of useful features, there is TR Jordan's [Guide to envoy's backpressure](https://blog.turbinelabs.io/a-guide-to-envoys-backpressure-22eec025ef04). And at last it is definitely also a good idea to read the official [Architecture overview](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/arch_overview) in the envoy documentation.
