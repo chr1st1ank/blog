@@ -1,0 +1,119 @@
+> bombardier -c 1 -d 30s -t 2s --latencies 'localhost:8088/calculate?input=test'
+Bombarding http://localhost:8088/calculate?input=test for 30s using 1 connection(s)
+[==========================================================================================] 30s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec         1.98       9.56      52.01
+  Latency      503.31ms   377.16us   505.52ms
+  Latency Distribution (Total)
+     50%   503.27ms
+     75%   503.41ms
+     90%   503.53ms
+     95%   503.74ms
+     99%   504.30ms
+  Latency Distribution (2xx)
+     50%   503.27ms
+     75%   503.41ms
+     90%   503.53ms
+     95%   503.74ms
+     99%   504.30ms
+  HTTP codes:
+    1xx - 0, 2xx - 60, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:     564.23/s
+
+> bombardier -c 2 -d 30s -t 2s --latencies 'localhost:8088/calculate?input=test'
+Bombarding http://localhost:8088/calculate?input=test for 30s using 2 connection(s)
+[==========================================================================================] 30s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec         1.97       9.53      52.19
+  Latency         0.99s    62.66ms      1.01s
+  Latency Distribution (Total)
+     50%      1.00s
+     75%      1.00s
+     90%      1.00s
+     95%      1.00s
+     99%      1.00s
+  Latency Distribution (2xx)
+     50%      1.00s
+     75%      1.00s
+     90%      1.00s
+     95%      1.00s
+     99%      1.00s
+  HTTP codes:
+    1xx - 0, 2xx - 61, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:     567.59/s
+
+> bombardier -c 3 -d 30s -t 2s --latencies 'localhost:8088/calculate?input=test'
+Bombarding http://localhost:8088/calculate?input=test for 30s using 3 connection(s)
+[==========================================================================================] 30s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec         1.96       9.49      52.19
+  Latency         1.48s   138.83ms      1.51s
+  Latency Distribution (Total)
+     50%      1.50s
+     75%      1.50s
+     90%      1.50s
+     95%      1.50s
+     99%      1.50s
+  Latency Distribution (2xx)
+     50%      1.50s
+     75%      1.50s
+     90%      1.50s
+     95%      1.50s
+     99%      1.50s
+  HTTP codes:
+    1xx - 0, 2xx - 62, 3xx - 0, 4xx - 0, 5xx - 0
+    others - 0
+  Throughput:     567.61/s
+
+> bombardier -c 4 -d 30s -t 2s --latencies 'localhost:8088/calculate?input=test'
+Bombarding http://localhost:8088/calculate?input=test for 30s using 4 connection(s)
+[==========================================================================================] 30s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec      1571.98     197.90    1853.91
+  Latency        2.57ms    53.71ms      1.51s
+  Latency Distribution (Total)
+     50%   599.00us
+     75%   636.00us
+     90%   688.00us
+     95%   743.00us
+     99%     1.19ms
+  Latency Distribution (2xx)
+     50%      1.50s
+     75%      1.50s
+     90%      1.50s
+     95%      1.50s
+     99%      1.51s
+  HTTP codes:
+    1xx - 0, 2xx - 62, 3xx - 0, 4xx - 0, 5xx - 47128
+    others - 0
+  Throughput:   375.85KB/s
+
+> bombardier -c 5 -d 30s -t 2s --latencies 'localhost:8088/calculate?input=test'
+Bombarding http://localhost:8088/calculate?input=test for 30s using 5 connection(s)
+[==========================================================================================] 30s
+Done!
+Statistics        Avg      Stdev        Max
+  Reqs/sec      1720.59     139.13    2028.90
+  Latency        2.93ms    51.34ms      1.51s
+  Latency Distribution (Total)
+     50%     1.13ms
+     75%     1.17ms
+     90%     1.27ms
+     95%     1.33ms
+     99%     1.76ms
+  Latency Distribution (2xx)
+     50%      1.50s
+     75%      1.50s
+     90%      1.50s
+     95%      1.50s
+     99%      1.50s
+  HTTP codes:
+    1xx - 0, 2xx - 62, 3xx - 0, 4xx - 0, 5xx - 51589
+    others - 0
+  Throughput:   411.42KB/s

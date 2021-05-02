@@ -33,7 +33,7 @@ class MovingAverageEstimator:
 
 
 class ResponseTimeLimiter:
-    """Functino executor with time tracking"""
+    """Function executor with time tracking"""
     def __init__(self, n_workers):
         self.n_workers = n_workers
         self.worker_pool = concurrent.futures.ProcessPoolExecutor(max_workers=n_workers)
@@ -43,6 +43,7 @@ class ResponseTimeLimiter:
 
     def can_process_in(self, max_time):
         """Returns true if the next function call can be processed within max_time"""
+        print(f"{self.n_active=}, {self.time_estimator.get_estimate()=}")
         if self.n_active >= self.n_workers:
             expected_time = self.time_estimator.get_estimate() * (self._calculations_to_await() + 1)
             print(f"{self.n_active=}, {expected_time=}")
@@ -86,7 +87,7 @@ async def on_startup():
 
 @app.get("/calculate")
 async def get_calculate(input: str, response: Response):
-    if not app.state.response_time_limiter.can_process_in(1.5):
+    if not app.state.response_time_limiter.can_process_in(max_time=1.8):
         response.status_code = 503
         return {"error": "Too many requests"}
         
