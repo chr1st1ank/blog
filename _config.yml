@@ -9,6 +9,7 @@ baseurl: ""
 # No link to twitter etc.:
 social_link: dot
 social_username: 
+lang: en_UK
 
 # Using https://github.com/broccolini/swiss
 remote_theme: broccolini/swiss
