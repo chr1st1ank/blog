@@ -49,3 +49,15 @@ blockquote em {
 p a {
     color: #447fcf;
 }
+
+article .h0 {
+    font-size: $article-h0-size-mobile;
+    @media (min-width: $breakpoint-lg) {
+        font-size: $article-h0-size-desktop;
+    }
+}
+@media (max-width: $breakpoint-lg) {
+  .h1 {
+    font-size: $h1-size-mobile;
+  }
+}

@@ -6,10 +6,13 @@ $prose-font-size: 20px;
 
 
 // Type scale
-$h0-mobile: 40px; // 64px;
-$h0-desktop: 81px; // 128px;
+$h0-mobile: 56px; // 64px;
+$h0-desktop: 96px; // 128px;
+$article-h0-size-mobile: 40px; // Not in theme
+$article-h0-size-desktop: 64px; // Not in theme
 
 $h1-size: 40px !default;
+$h1-size-mobile: 32px !default; // Not in theme
 $h2-size: 32px !default;
 $h3-size: 24px !default;
 $h4-size: 20px !default;
@@ -23,7 +26,7 @@ $color-border: #ddd !default;
 $container-width: 70em; //64em;
 
 // Large breakpoint
-$breakpoint-lg: 52em;
+$breakpoint-lg: 70em;
 
 // Spacing unit
 $spacer: 8px !default;
