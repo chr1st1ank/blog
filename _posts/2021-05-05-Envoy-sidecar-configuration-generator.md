@@ -10,8 +10,60 @@ This is a follow-up for my recent post ["Getting started with an Envoy Sidecar P
 
 ## Envoy config file generator
 
-{% include envoy-config-generator.html %}
+{% include envoy-sidecar-configuration-generator.html %}
 
+Choose the features of the envoy proxy with the checkboxes below. The detailed configuration, e.g. of hostnames, ports or limits can be done in the yaml file afterwards.
+
+Follow the links in the checkbox descriptions to get further explanations on the individual settings.
+<div id="template-inputs">
+<fieldset>
+<table>
+    <legend>Features</legend>
+    <tr>
+        <td><input type="checkbox" id="envoy-access_log" checked></td>
+        <td><label for="envoy-access_log"><a href="#structured-access-log-in-json-format">Structured access log</a>
+          <br><span class="hint">JSON formatted access log messages</span>
+        </label></td>
+    </tr>
+    <tr>
+        <td><input type="checkbox" id="envoy-problem_responses" checked></td>
+        <td>
+          <label for="envoy-problem_responses">
+            Error responses as application/problem+json 
+            <br><span class="hint">Change error responses into standard problem objects as defined in https://tools.ietf.org/html/rfc7807</span>
+          </label>
+        </td>
+    </tr>
+    <tr>
+        <td><input type="checkbox" id="envoy-jwt_auth" checked></td>
+        <td><label for="envoy-jwt_auth">JWT authorization <a href="">⇨ more</a></label></td>
+    </tr>
+    <tr>
+        <td><input type="checkbox" id="envoy-static_limiting" checked></td>
+        <td><label for="envoy-static_limiting">Static rate limiting</label></td>
+    </tr>
+    <tr>
+        <td><input type="checkbox" id="envoy-adaptive_concurrency" checked></td>
+        <td><label for="envoy-adaptive_concurrency">Adaptive concurrency limiting</label></td>
+    </tr>
+    <tr>
+        <td><input type="checkbox" id="envoy-backend"></td>
+        <td><label for="envoy-backend">Add backend service with circuit breaker</label></td>
+    </tr>
+</table>
+</fieldset>
+</div>
+
+Generated `envoy.yaml` configuration file:
+<div class="highlight">
+<button class="btn" id="config-select-btn" style="float: right;">Select all</button>
+<button class="btn" id="config-copy-btn" style="float: right;">Copy to clipboard</button>
+<pre style="height: 30em">
+<code id="envoy-config">
+TEMPLATE
+</code>
+</pre>
+</div>
 
 
 Todos:
