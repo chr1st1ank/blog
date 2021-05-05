@@ -1,0 +1,125 @@
+<!-- https://highlightjs.org/ for highlighting the generated yaml code -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/styles/stackoverflow-dark.min.css" integrity="sha512-9F4w40pQJloG92QgszKGVFODKAkZ70xtcDe2IPcVELXMmkxkojfL6jcP6XSf1NTf4yVc3K0T9h/0gPp8bVIn6w==" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/highlight.min.js" integrity="sha512-s+tOYYcC3Jybgr9mVsdAxsRYlGNq4mlAurOrfNuGMQ/SCofNPu92tjE7YRZCsdEtWL1yGkqk15fU/ark206YTg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/languages/yaml.min.js" integrity="sha512-w1UGeHQBy7zjHSSPA6To4w12xvKFANmA9yzShsF0k8wLoXYIVgDSTbGL+P8RwEW3ZFnibJsJsKcacTLOcyT7rQ==" crossorigin="anonymous"></script>
+<!-- https://mozilla.github.io/nunjucks/ for rendering the config template -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nunjucks/3.0.1/nunjucks.min.js" integrity="sha512-IIuR+Zp8wvP0dxNcSsRPoL7SXzP1kGmosDtcU7f6cPObZ9F5Ze/icFSRH/SqigP468jGwDm2XOE0/gSGm/cTBw==" crossorigin="anonymous"></script>
+<script>
+nunjucks.configure({ autoescape: true });
+var envoyTemplate = "";
+// Selects the generated config
+function selectConfig() {
+  node = document.getElementById("envoy-config");
+  const selection = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(node);
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+// Copies the generated config to the clipboard
+function copyConfig() {
+  node = document.getElementById("envoy-config");
+  const selection = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(node);
+  selection.removeAllRanges();
+  selection.addRange(range);
+  document.execCommand("copy");
+  selection.removeAllRanges();
+}
+// Fetch the tempalte and initialize everything
+async function initConfigGenerator() {
+  envoyTemplate = await fetch('/assets/files/envoy-template.yaml.j2').then(response => response.text());
+  updateTemplate();
+  document.getElementById("config-select-btn").addEventListener("click", selectConfig);
+  document.getElementById("config-copy-btn").addEventListener("click", copyConfig);
+}
+// On change re-render the template
+function updateTemplate() {
+  var renderedConfig = nunjucks.renderString(
+    envoyTemplate, 
+    { 
+      access_log: document.getElementById("envoy-access_log").checked,
+      problem_responses: document.getElementById("envoy-problem_responses").checked,
+      jwt_auth: document.getElementById("envoy-jwt_auth").checked,
+      static_limiting: document.getElementById("envoy-static_limiting").checked,
+      adaptive_concurrency: document.getElementById("envoy-adaptive_concurrency").checked,
+      backend: document.getElementById("envoy-backend").checked
+    }
+  );
+  renderedConfig = hljs.highlight(renderedConfig, {language: "yaml", ignoreIllegals: true }).value; 
+  document.getElementById("envoy-config").innerHTML = renderedConfig;
+  document.getElementById("template-inputs").addEventListener("input", updateTemplate, false);
+}
+window.addEventListener("load", initConfigGenerator, false);
+</script>
+<style>
+#template-inputs .hint {
+  font-size: 90%;
+  font-style: italic;
+  color: #777;
+}
+#template-inputs table, #template-inputs tr, #template-inputs td {
+  border: none;
+}
+#template-inputs table {
+  margin: 0em;
+}
+#template-inputs fieldset {
+    width: 80%;
+  margin: 2em;
+}
+</style>
+
+Choose the features of the envoy proxy with the checkboxes below. The detailed configuration, e.g. of hostnames, ports or limits can be done in the yaml file afterwards.
+
+Follow the links in the checkbox descriptions to get further explanations on the individual settings.
+<div id="template-inputs">
+<fieldset>
+<table>
+    <legend>Features</legend>
+    <tr>
+        <td><input type="checkbox" id="envoy-access_log" checked></td>
+        <td><label for="envoy-access_log"><a href="#structured-access-log-in-json-format">Structured access log</a>
+          <br><span class="hint">JSON formatted access log messages</span>
+        </label></td>
+    </tr>
+    <tr>
+        <td><input type="checkbox" id="envoy-problem_responses" checked></td>
+        <td>
+          <label for="envoy-problem_responses">
+            Error responses as application/problem+json 
+            <br><span class="hint">Change error responses into standard problem objects as defined in https://tools.ietf.org/html/rfc7807</span>
+          </label>
+        </td>
+    </tr>
+    <tr>
+        <td><input type="checkbox" id="envoy-jwt_auth" checked></td>
+        <td><label for="envoy-jwt_auth">JWT authorization <a href="">⇨ more</a></label></td>
+    </tr>
+    <tr>
+        <td><input type="checkbox" id="envoy-static_limiting" checked></td>
+        <td><label for="envoy-static_limiting">Static rate limiting</label></td>
+    </tr>
+    <tr>
+        <td><input type="checkbox" id="envoy-adaptive_concurrency" checked></td>
+        <td><label for="envoy-adaptive_concurrency">Adaptive concurrency limiting</label></td>
+    </tr>
+    <tr>
+        <td><input type="checkbox" id="envoy-backend"></td>
+        <td><label for="envoy-backend">Add backend service with circuit breaker</label></td>
+    </tr>
+</table>
+</fieldset>
+</div>
+
+Generated `envoy.yaml` configuration file:
+<div class="highlight">
+<button class="btn" id="config-select-btn" style="float: right;">Select all</button>
+<button class="btn" id="config-copy-btn" style="float: right;">Copy to clipboard</button>
+<pre style="height: 30em">
+<code id="envoy-config">
+TEMPLATE
+</code>
+</pre>
+</div>
