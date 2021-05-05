@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "The throughput paradox – Why a machine learning API needs load shedding"
+title:  "The Throughput Paradox – Why a Machine Learning API Needs Load Shedding"
 description: Why throughput decreases and latency increases under load in a simple machine learning API.
 ---
 <script src="https://cdn.plot.ly/plotly-1.58.4.min.js"></script>

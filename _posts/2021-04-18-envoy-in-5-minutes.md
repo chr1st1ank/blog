@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Getting started with an Envoy Sidecar Proxy in 5 Minutes"
+title:  "Getting Started with an Envoy Sidecar Proxy in 5 Minutes"
 description: A guide to getting started with Envoy as a reverse proxy sidecar container.
 ---
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
