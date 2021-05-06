@@ -27,4 +27,9 @@ For local development do one of the following:
 - Build the static pages: `bundle exec jekyll build`
 - Serve the pages on a local webserver: `bundle exec jekyll serve -P 4000`
 
-In the latter case the result is available at http://localhost:4000/
+In the latter case the result is available at http://127.0.0.1:4000/
+
+# When finished check for broken links
+```shell
+wget --spider -r -nd -nv -H -l 1 -w 0.1 http://127.0.0.1:4000
+```

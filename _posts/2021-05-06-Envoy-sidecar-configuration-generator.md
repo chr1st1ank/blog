@@ -4,16 +4,30 @@ title:  "Envoy sidecar configuration generator"
 description: A configuration file generator for an envoy reverse proxy with all the bells and whistles
 ---
 
-**Special issue: A configuration file generator for an envoy reverse proxy with all the bells and whistles. If you ever wanted a working base configuration with the most important features of Envoy as sidecar proxy, this is the place to get one.**
+**This post contains a configuration file generator for an envoy reverse proxy with all the bells and whistles. If you are looking for a working base configuration with the most important features of Envoy as sidecar proxy, this is the place to get one.**
 
-This is a follow-up for my recent post ["Getting started with an Envoy Sidecar Proxy in 5 Minutes"]({% post_url 2021-04-18-envoy-in-5-minutes %}). There I explained the basic structure of the [Envoy](https://www.envoyproxy.io) configuration file. In this special post I'm presenting a configuration file generator. It builds up on the minimal setup from the other post and adds things like authentication, encryption, rate-limiting and an optional backend connection with circuit-breaking and failover. So the main cross-cutting functionalities that have to be implemented in most micro-services. By using Envoy as sidecar all this can be left out of the application code and at the same time it is implemented robustly and efficiently.
+The last post ["Getting started with an Envoy Sidecar Proxy in 5 Minutes"]({% post_url 2021-04-18-envoy-in-5-minutes %}) explained the basic structure of the [Envoy](https://www.envoyproxy.io) configuration file. In this special post I'm presenting a configuration file generator. It builds up on the minimal setup presented last time and adds things like authentication, encryption, rate-limiting and an optional backend connection with circuit-breaking and failover. So the main cross-cutting functionalities that have to be implemented in most micro-services. By using Envoy as sidecar all this can be left out of the application code and at the same time it is implemented robustly and efficiently.
+
+The following graph shows the architectural setup. The actual web service API container is shielded by an additional Envoy container as two-sided proxy. Every incoming request goes through it to allow for authentication, load shedding and so on. But also outgoing requests can go via the proxy, so that it can handle failover and circuit breaking for example.
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true, theme:"neutral"});</script>
+<div class="mermaid">
+graph LR;
+Client -- API request --> Envoy
+Envoy(Envoy container) -- Backend request --> Backend(Backend service)
+subgraph Pod[Docker Service or Kubernetes Pod]
+Envoy -- API request --> API(API container) -- Backend request --> Envoy
+end
+linkStyle 1 stroke:#3677a9,color:#3677a9
+linkStyle 3 stroke:#3677a9,color:#3677a9
+</div>
 
 {% include toc.md %}
 ## Envoy config file generator
 
 {% include envoy-sidecar-configuration-generator.html %}
 
-Choose the features of the envoy proxy with the checkboxes below. The detailed configuration, e.g. of hostnames, ports or limits can be done in the yaml file afterwards.
+Choose the features of the envoy proxy with the checkboxes below. The Envoy configuration is immediately updated in the textbox below. The detailed configuration, e.g. of hostnames, ports or limits can be done in the yaml file afterwards.
 
 Follow the links in the checkbox descriptions to get further explanations on the individual settings.
 <div id="template-inputs">
@@ -85,7 +99,7 @@ TEMPLATE
 </div>
 
 ## Structured access log in JSON format
-Envoy offers the option to write an access log in arbitrary structure. To make it indexable with log aggregators also json format is offered.
+Envoy offers the option to write an access log in arbitrary structure. To make it indexable with log aggregators also JSON format is offered.
 
 The definition used by the config generator adds a couple of fields into a JSON object, missing fields are left out (that's `omit_empty_values`) and everything is send to stderr. Of course also other log destinations are available.
 ```yaml
