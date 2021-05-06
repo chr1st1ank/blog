@@ -42,6 +42,7 @@ function updateTemplate() {
       access_log: document.getElementById("envoy-access_log").checked,
       problem_responses: document.getElementById("envoy-problem_responses").checked,
       jwt_auth: document.getElementById("envoy-jwt_auth").checked,
+      tls_termination: document.getElementById("envoy-tls_termination").checked,
       static_limiting: document.getElementById("envoy-static_limiting").checked,
       adaptive_concurrency: document.getElementById("envoy-adaptive_concurrency").checked,
       backend: document.getElementById("envoy-backend").checked
@@ -66,7 +67,7 @@ window.addEventListener("load", initConfigGenerator, false);
   margin: 0em;
 }
 #template-inputs fieldset {
-    width: 80%;
-  margin: 2em;
+  margin-bottom: 2em;
+  display: inline-block
 }
 </style>
