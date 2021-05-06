@@ -3,12 +3,23 @@ layout: post
 title:  "Getting Started with an Envoy Sidecar Proxy in 5 Minutes"
 description: A guide to getting started with Envoy as a reverse proxy sidecar container.
 ---
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="/assets/js/mermaid/8.9.3/mermaid.min.js" integrity="sha512-kxc8+BGu0/ESUMiK6Q/goKwwcoIoFVcXZ4GwMoGupMA/qTGx19BcNn1uiebOZO5f85ZD0oTdvlRKdeNh3RTnVg==" crossorigin="anonymous"></script>
 <script>mermaid.initialize({startOnLoad:true, theme:"neutral"});</script>
 
 **This post shows the basic setup of [Envoy](https://www.envoyproxy.io) as a reverse proxy in a sidecar container. It will show a typical setup of a small web API accompanied by an Envoy as sidecar which does nothing else than just forwarding requests to the backend. That's the right starting point for adding more features and experimenting with the setup.** 
 
 Envoy is an extremely powerful and extendible system which can be configured statically or dynamically as part of a service mesh. This flexibility makes it hard to get started. But when configured correctly it can take over all the cross-cutting networking concerns like authentication, encryption, rate-limiting, backend failover, circuit breaking and more. And all of it in a robust and reusable fashion without recognizable latency increase for most applications.
+
+The target setup looks like below: All incoming requests go through the Envoy reverse proxy, so that it can take over networking concerns and the API can concentrate on the core application logic:
+<div class="mermaid">
+graph LR;
+Client -- API request --> Envoy(Envoy container)
+subgraph Pod[Docker Service or Kubernetes Pod]
+Envoy -- API request --> API(API container)
+end
+</div>
+
+{% include toc.md %}
 
 ## Container setup with docker-compose
 Let's start with the services. For the purpose of this post we will user docker-compose. But the very same can also be achieved by a Kubernetes pod with two containers or by an envoy installed into the docker container of the main application. But docker-compose is the easiest for local experiments. This is the compose file:

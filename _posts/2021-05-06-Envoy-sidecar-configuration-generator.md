@@ -9,7 +9,7 @@ description: A configuration file generator for an envoy reverse proxy with all 
 The last post ["Getting started with an Envoy Sidecar Proxy in 5 Minutes"]({% post_url 2021-04-18-envoy-in-5-minutes %}) explained the basic structure of the [Envoy](https://www.envoyproxy.io) configuration file. In this special post I'm presenting a configuration file generator. It builds up on the minimal setup presented last time and adds things like authentication, encryption, rate-limiting and an optional backend connection with circuit-breaking and failover. So the main cross-cutting functionalities that have to be implemented in most micro-services. By using Envoy as sidecar all this can be left out of the application code and at the same time it is implemented robustly and efficiently.
 
 The following graph shows the architectural setup. The actual web service API container is shielded by an additional Envoy container as two-sided proxy. Every incoming request goes through it to allow for authentication, load shedding and so on. But also outgoing requests can go via the proxy, so that it can handle failover and circuit breaking for example.
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="/assets/js/mermaid/8.9.3/mermaid.min.js" integrity="sha512-kxc8+BGu0/ESUMiK6Q/goKwwcoIoFVcXZ4GwMoGupMA/qTGx19BcNn1uiebOZO5f85ZD0oTdvlRKdeNh3RTnVg==" crossorigin="anonymous"></script>
 <script>mermaid.initialize({startOnLoad:true, theme:"neutral"});</script>
 <div class="mermaid">
 graph LR;

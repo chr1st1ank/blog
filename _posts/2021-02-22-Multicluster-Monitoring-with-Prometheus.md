@@ -3,7 +3,7 @@ layout: post
 title:  "Multicluster Application Monitoring with Prometheus"
 description: How to centralize the monitoring of Kubernetes applications running in different environments with Prometheus.
 ---
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="/assets/js/mermaid/8.9.3/mermaid.min.js" integrity="sha512-kxc8+BGu0/ESUMiK6Q/goKwwcoIoFVcXZ4GwMoGupMA/qTGx19BcNn1uiebOZO5f85ZD0oTdvlRKdeNh3RTnVg==" crossorigin="anonymous"></script>
 <script>mermaid.initialize({startOnLoad:true, theme:"neutral"});</script>
 
 **[Prometheus](https://prometheus.io/) is a popular choice for application monitoring. It is easy to set up and can be deployed alongside the applications inside a Kubernetes cluster. However, when you cannot run your main Prometheus instance within the same cluster it becomes a bit more tricky. At work we recently set up Prometheus monitoring for a web service which is deployed to independent kubernetes clusters in different regions. The official documentation is a bit sparce on this topic. In this post I will show what I learned about combining the metrics of applications running in separate Kubernetes clusters.**

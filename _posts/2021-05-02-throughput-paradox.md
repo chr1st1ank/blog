@@ -3,7 +3,7 @@ layout: post
 title:  "The Throughput Paradox – Why a Machine Learning API Needs Load Shedding"
 description: Why throughput decreases and latency increases under load in a simple machine learning API.
 ---
-<script src="https://cdn.plot.ly/plotly-1.58.4.min.js"></script>
+<script src="/assets/js/plotly.js/1.58.4/plotly.min.js" integrity="sha512-odxyOOOwpEgYQnS+TzF/P33O+DfGNGqyh89pJ/u2addhMw9ZIef3M8aw/otYSgsPxLdZi3HQhlI9IiX3H5SxpA==" crossorigin="anonymous"></script>
 
 **Especially compute-intensive services like a machine learning inference API can heavily suffer from queueing effects. I will demonstrate this with response time measurements of small demo service and show how to deal with this using load-shedding**
 
