@@ -8,6 +8,7 @@ description: A configuration file generator for an envoy reverse proxy with all 
 
 This is a follow-up for my recent post ["Getting started with an Envoy Sidecar Proxy in 5 Minutes"]({% post_url 2021-04-18-envoy-in-5-minutes %}). There I explained the basic structure of the [Envoy](https://www.envoyproxy.io) configuration file. In this special post I'm presenting a configuration file generator. It builds up on the minimal setup from the other post and adds things like authentication, encryption, rate-limiting and an optional backend connection with circuit-breaking and failover. So the main cross-cutting functionalities that have to be implemented in most micro-services. By using Envoy as sidecar all this can be left out of the application code and at the same time it is implemented robustly and efficiently.
 
+{% include toc.md %}
 ## Envoy config file generator
 
 {% include envoy-sidecar-configuration-generator.html %}
@@ -330,63 +331,67 @@ In a situation where a service relies on some upstream service, this can also be
 To handle these upstream dependency another listener address with minimal http filter is added, pointing to an additional cluster definition:
 
 ```yaml
-- address:
-    socket_address:
-      address: 0.0.0.0
-      port_value: 10000
-  filter_chains:
-  - filters:
-    - name: envoy.filters.network.http_connection_manager
+static_resources:
+  listeners:
+  # ...
+  - address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 10000
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          codec_type: AUTO
+          stat_prefix: ingress_http
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: backend_app
+              domains:
+              - "*"
+              routes:
+              - match:
+                  prefix: "/"
+                route:
+                  cluster: backend_cluster
+          http_filters:
+          - name: envoy.filters.http.router
+  clusters:
+  # ...
+  - name: backend_cluster
+    connect_timeout: 0.5s
+    type: STRICT_DNS
+    health_checks:
+      always_log_health_check_failures: true
+      timeout: 0.1s
+      interval: 3s
+      unhealthy_threshold: 3
+      healthy_threshold: 1
+      http_health_check:
+        path: /
+    circuit_breakers:
+      thresholds:
+      - priority: "DEFAULT"
+        max_requests: 75
+        max_pending_requests: 35
+        retry_budget:
+          min_retry_concurrency: 1
+    load_assignment:
+      cluster_name: backend_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: www.w3.org
+                port_value: 443
+    # Enable TLS encryption
+    transport_socket:
+      name: envoy.transport_sockets.tls
       typed_config:
-        "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
-        codec_type: AUTO
-        stat_prefix: ingress_http
-        route_config:
-          name: local_route
-          virtual_hosts:
-          - name: backend_app
-            domains:
-            - "*"
-            routes:
-            - match:
-                prefix: "/"
-              route:
-                cluster: backend_cluster
-        http_filters:
-        - name: envoy.filters.http.router
-clusters:
-- name: backend_cluster
-  connect_timeout: 0.5s
-  type: STRICT_DNS
-  health_checks:
-    always_log_health_check_failures: true
-    timeout: 0.1s
-    interval: 3s
-    unhealthy_threshold: 3
-    healthy_threshold: 1
-    http_health_check:
-      path: /
-  circuit_breakers:
-    thresholds:
-    - priority: "DEFAULT"
-      max_requests: 75
-      max_pending_requests: 35
-      retry_budget:
-        min_retry_concurrency: 1
-  load_assignment:
-    cluster_name: backend_cluster
-    endpoints:
-    - lb_endpoints:
-      - endpoint:
-          address:
-            socket_address:
-              address: www.w3.org
-              port_value: 443
-  # Enable TLS encryption
-  transport_socket:
-    name: envoy.transport_sockets.tls
-    typed_config:
-      "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
 ```
 
 The advantage is that envoy now takes care of active health checking and also adds a [circuit breaker functionality](https://www.envoyproxy.io/docs/envoy/latest/configuration/upstream/cluster_manager/cluster_circuit_breakers). That means that a failing backend is completely cut off until it becomes available again. Neither the backend needs to fear a lot of retries nor the downstream service (our webservice) needs to wait until the requests maybe time out eventually.
@@ -394,4 +399,6 @@ The advantage is that envoy now takes care of active health checking and also ad
 If multiple backends are available they can simply be added to the `ln_endpoints` section and Envoy automatically handles load balancing and fails over to the remaining backend if one is down.
 
 ## Summary
+When doing my first steps with Envoy I was missing a simple way to start learning how Envoy works in a practical way. So I created the config file generator in order for others to have an easier start. All the configuration options available work out-of-the-box with a [docker-compose setup hosted on github](https://github.com/chr1st1ank/blog/tree/main/code/2021-05-06-envoy-sidecar-configuration-generator). It includes a minimal Python API running in a docker container and an Envoy sidecar. So for testing one can spin both up with `docker-compose up` and experiment with the different options.
 
+The Envoy team also provides a [config file generator](https://www.envoyproxy.io/docs/envoy/latest/operations/tools/config_generator) for multiple use-cases. It needs a little bit of setup, but then it gives more options and the results are easier reproducible than with the simple online version above.

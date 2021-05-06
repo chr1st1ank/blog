@@ -1,0 +1,18 @@
+version: '2.4'
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.18.2
+    ports:
+      - "8080:8080"     # Port to access the api through Envoy
+      - "8081:8081"     # Port to access Envoy's admin interface
+      - "10000:10000"   # Port to be used by the API to access its upstream backend
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+      - ./public.jwks:/etc/envoy/public.jwks
+  api:
+    image: tiangolo/uvicorn-gunicorn-fastapi:python3.8
+    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "9000"]
+    ports:
+      - "9000:9000"     # Direct API access, only used by Envoy
+    volumes:
+      - ./api.py:/app/api.py
