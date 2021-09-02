@@ -1,10 +1,24 @@
 ---
 layout: post
-title:  "A first look at ONNX for a Scikit-Learn model"
-description: How to use the ...
+title:  "Machine Learning Models Light as a Feather with ONNX"
+description: How to train a text classification model with Scikit-Learn and deploy it for prediction with ONNX.
 ---
-**Headline**
+**Have you ever faced the challenge to create a fast, lightweight and powerfull API out of your machine learning model? In this case you've probably cursed the bloatware introduced by all the machine learning dependencies from the training environment that you also need to carry over to the production web service. This post shows an approach which makes it possible to leave most of this behind and share the blank model in a way that it can even be used across multiple programming languages.**
 
+
+## What is ONNX?
+
+## Training an example model
+
+## Converting to ONNX format
+
+## Deploying for Production Inference
+
+## Summary
+
+
+
+## Notes
 Older attempt: (PMML)[http://dmg.org/pmml/v4-4-1/GeneralStructure.html]
 - https://en.wikipedia.org/wiki/Predictive_Model_Markup_Language
 
@@ -18,6 +32,8 @@ Netron to view model: https://github.com/lutzroeder/netron
 Online at: https://netron.app/
 
 Example with onnx + tfidf: http://onnx.ai/sklearn-onnx/auto_examples/plot_tfidfvectorizer.html
+
+ONNX + JS MNIST example: https://microsoft.github.io/onnxruntime-web-demo/#/mnist
 
 
 ## Issues
