@@ -8,3 +8,5 @@ _site/
 .vscode/
 .secrets
 .python-version
+.idea/
+.ipynb_checkpoints/
