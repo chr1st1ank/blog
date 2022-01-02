@@ -25,12 +25,12 @@ The last command installs all the ruby dependencies ("gems") from the Gemfile. T
 
 For local development do one of the following:
 - Build the static pages: `bundle exec jekyll build`
-- Serve the pages on a local webserver: `bundle exec jekyll serve -P 4000`
+- Serve the pages on a local webserver: `bundle exec jekyll serve -P 8080`
 - Or serve the pages with apache2 from docker: `docker run -it -v (pwd)/_site:/usr/local/apache2/htdocs -p8080:80 httpd`
 
-In the latter case the result is available at http://127.0.0.1:4000/
+In the latter case the result is available at http://127.0.0.1:8080/
 
 # When finished check for broken links
 ```shell
-wget --spider -r -nd -nv -H -l 1 -w 0.1 http://127.0.0.1:4000
+wget --spider -r -nd -nv -H -l 1 -w 0.1 http://127.0.0.1:8080
 ```
