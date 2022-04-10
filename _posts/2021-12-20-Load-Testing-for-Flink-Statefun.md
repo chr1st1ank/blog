@@ -1,25 +1,79 @@
 ---
 layout: post
 title:  "Testing a Flink Stateful Function Service"
-description: How to run unit tests, functional tests and load tests for an Apache Flink Stateful Function service
+description: How to run component and load tests for an individual Apache Flink Stateful Function service
 ---
 <script src="/assets/js/mermaid/8.9.3/mermaid.min.js" integrity="sha512-kxc8+BGu0/ESUMiK6Q/goKwwcoIoFVcXZ4GwMoGupMA/qTGx19BcNn1uiebOZO5f85ZD0oTdvlRKdeNh3RTnVg==" crossorigin="anonymous"></script>
 <script>mermaid.initialize({startOnLoad:true, theme:"neutral"});</script>
 <script src="/assets/js/plotly.js/1.58.4/plotly.min.js" integrity="sha512-odxyOOOwpEgYQnS+TzF/P33O+DfGNGqyh89pJ/u2addhMw9ZIef3M8aw/otYSgsPxLdZi3HQhlI9IiX3H5SxpA==" crossorigin="anonymous"></script>
 
-**With [Flink Statefun](https://nightlies.apache.org/flink/flink-statefun-docs-master/) a powerful, polyglot data streaming framework has entered the real-time data processing landscape. It allows to break down a streaming pipeline into individual microservices which can each take care of one or more tasks. This post is about how to test these services.**
+**With [Flink Statefun](https://nightlies.apache.org/flink/flink-statefun-docs-master/) a powerful, polyglot data streaming framework has entered the real-time data processing landscape. It allows to break down a streaming pipeline into individual microservices which can each take care of one or more tasks. This post is about how to test these services individually without executing the whole pipeline.**
 
-## Intro 
-TODO: Remove heading
+The development of stateful functions is quite straight-forwards thanks to extensive documentation and a couple of useful examples in the [Statefun Playground repository](https://github.com/apache/flink-statefun-playground). It is easy to create a graph of function services to express a complex streaming logic. However, when it comes to verifying if the logic is implemented correctly or where a certain issue comes from it quickly becomes difficult. Before realizing it, the developers find themselves trapped in the cobweb of functions which process messages and send more messages to others. Not everything can be tackled with low-level unit tests and so only the option remains to start the full streaming pipeline with all services and see where messages come and go and what is written to logs.
 
-Classical web services are often I/O bound because of their database connections or source files they have to deliver. In contrast, machine learning APIs are in general heavily CPU bound. A single request on a prediction endpoint may block a CPU for as much as a second. Therefore it is vital to think about the expected load patterns and test the performance under load. If the number of clients exceeds the number of available server processes the response time can quickly explode because of the queue the requests have to go through. In effect the throughput decreases. The more client requests come, the fewer can actually be served.
+In this post a more managable approach is demonstrated how one can test the individual stateful functions in isolation. Every Stateful Function is a web-service and can be tested like one. The only tricky part lies in understanding what input data structures it expects and what its responses look like.
 
-> 
-> To an outside observer, there's no difference <br>
-> between "really, really slow" and "down" 
-> *– Michael T. Nygard, "Release It!", p. 119*
->
+## The communication protocol of a stateful function call
+
+Stateful functions are normal web services for which tailored contract tests, functional tests and performance tests can be implemented, covering the important edge cases and branches of the streaming logic. What makes this a bit harder than usual is the data flow imposed by the Statefun architecture. 
+
+<!--div class="mermaid">
+graph LR;
+rt(Statefun Runtime) -- HTTP Post request -- > API --response-- >rt
+subgraph Pod[Web Service]
+API(API) -- payload -- > RRH(RequestReplyHandler) --message and state-- > fn(stateful function) 
+fn --messages and state-- > RRH --payload-- > API
+end
+</div-->
+
+![request flow of stateful functions](/assets/images/2022-03-20_flink_statefun_communication.svg "Request flow of a stateful functions call")
+
+The input of the web service is binary data coming as HTTP Post requests from the Statefun runtime. The API has to forward the payload to the RequestReplyHandler of the Flink Statefun SDK. This deserializes the data and translates it into native function calls to the actual function implementations. The code we want to test is in the API component and in the stateful function component. The other participants of a function call are provided by the framework. So we can run unit tests by mocking out the foreign parts and concentrating on either the API or the stateful function component. But how can we guarantee that it all fits together? We need a component test, a functional test for the whole flow of the request!
+
+## Understanding how the RequestReplyHandler works
+
+If we can demystify how the payload of the HTTP request looks like, we can send HTTP requests against the web service and validate the correct handling of the whole request flow. The key to understanding is a view into the [code of the RequestReplyHandler](https://github.com/apache/flink-statefun/blob/release-3.2/statefun-sdk-python/statefun/request_reply_v3.py#L231) (simplified):
+```python
+class RequestReplyHandler(object):
+    # ...
+
+    async def handle_async(self, request_bytes: bytes) -> bytes:
+        # 1. Parse request payload
+        pb_to_function = ToFunction()
+        pb_to_function.ParseFromString(request_bytes)
+
+        # 2. Extract the target address and find the matching function
+        pb_target_address = pb_to_function.invocation.target
+        sdk_address = sdk_address_from_pb(pb_target_address)
+        target_fn: StatefulFunction = self.functions.for_typename(sdk_address.typename)
+        
+        # 3. Invoke the batch of statefun calls
+        ctx = UserFacingContext(sdk_address, res.storage)
+        fun = target_fn.fun
+        pb_batch = pb_to_function.invocation.invocations
+        for pb_invocation in pb_batch:
+            msg = Message(target_typename=sdk_address.typename, target_id=sdk_address.id,
+                          typed_value=pb_invocation.argument)
+            ctx._caller = sdk_address_from_pb(pb_invocation.caller)
+            await fun(ctx, msg)
+                
+        # 4. Collect the results
+        pb_from_function = collect_success(ctx)
+        return pb_from_function.SerializeToString()
+```
+
+The code is reduced to the core logic as far as we need to understand it. The input of `handle_async` is just the raw binary data from the HTTP request body. The steps are as follows:
+1. Deserialize the binary data as a protobuf object of the type `ToFunction`. 
+2. The `ToFunction` object contains not only the data for a function call but also the "address", i.e. the name of the target function. This is extracted in the second step to find out which function to call.
+3. Now the target function can be called. One `ToFunction` object can hold the data for a whole batch of function calls which are executed sequentially in a loop.
+4. Eventually all the results are collected and serialized into a protobuf object of the type `FromFunction`.
+
+The [definition of the protobufs](https://github.com/apache/flink-statefun/blob/release-3.2/statefun-sdk-protos/src/main/protobuf/sdk/request-reply.proto) used are also available in the flink-statefun repository.
+
+What we can take out of this is: We have to provide a `ToFunction` protobuf as input of the RequestReplyHandler and we will get a `FromFunction` protobuf as output. The same holds true for the whole webservice, only that the protobuf objects in this case are wrapped into HTTP request and response.
+
 ## The "Greeter" example
+Before we continue with writing a first component test we need an example to play with.
 The training project [flink-statefun-playground](flink-statefun-playground) gives us a nice example pipeline with the main structural elements of a Flink Statefun system: Ingress and egress messages, messages between functions and local state. So it is a perfect setup to show how a test framework can be set up.
 
 The sequence diagram below shows an example of the logical flow. It starts with a kafka message containing the name of some person. The message is forwarded as HTTP request to the first stateful function ("person") by the Flink runtime. The function updates the state variable, prepares a message to the next stateful function sends both back in the HTTP response. The runtime parses the output, stores the state internally and forwards the new message to the next stateful function ("greeter") as another HTTP request. The greeter function responds with a greeting as egress message in the HTTP response. This egress message is then pushed to Kafka by the statefun runtime.
@@ -39,54 +93,10 @@ sequenceDiagram
     Flink Statefun Runtime-->>-Kafka: "Welcome George!"
 </div>
 
-So the stateful functions are normal web services with a request/response model. In addition the design is such that the functions can be completely stateless. The state is maintained by the statefun runtime. This makes it very easy to test them.
+So the stateful functions are normal web services with a request/response model. In addition the design is such that the functions are kept completely stateless. The state is maintained by the statefun runtime. This makes it very easy to test them.
 
 For this post we will pick the "greeter" function and show how the HTTP requests by the Flink runtime can be simulated by a normal web service test framework. This way the endpoints of the stateful function can be validated.
             
-## The communication protocol of a stateful function call
-
-The foundation for a correct application is a detailed suite of unit tests, covering all the edge cases and branches of the application logic. Stateful functions are normal web services for which the same applies. What makes this a bit harder than usual is the data flow imposed by the Statefun architecture. 
-
-<div class="mermaid">
-graph LR;
-rt(Statefun Runtime) -- HTTP Post request --> API
-subgraph Pod[Web Service]
-API(API) -- payload --> RRH(RequestReplyHandler) --message and state--> fn(stateful function) 
-end
-</div>
-
-The input of the web service is binary data coming as HTTP Post requests from the Statefun runtime. The API has to forward the payload to the RequestReplyHandler of the Flink Statefun SDK. This deserializes the data and translates it into native function calls to the actual function implementations. The code we want to test is in the API component and in the stateful function component. The other participants of a function call are provided by the framework. So we can run unit tests by mocking out the foreign parts and concentrating on either the API or the stateful function component. But how can we guarantee that it all fits together? We need an integration test, a functional test for the whole flow of the request!
-
-If we can demystify how the payload of the HTTP request looks like, we can send HTTP requests against the web service and validate the correct handling of the whole request flow. The key to understand is a view into the [code of the RequestReplyHandler](https://github.com/apache/flink-statefun/blob/57e13b1cc3863c452b98581ba849e2103a94fe66/statefun-sdk-python/statefun/request_reply_v3.py#L231) (simplified):
-```python
-class RequestReplyHandler(object):
-    # ...
-
-    async def handle_async(self, request_bytes: bytes) -> bytes:
-        # parse
-        pb_to_function = ToFunction()
-        pb_to_function.ParseFromString(request_bytes)
-        # target address
-        pb_target_address = pb_to_function.invocation.target
-        sdk_address = sdk_address_from_pb(pb_target_address)
-        
-        # invoke the batch
-        pb_batch = pb_to_function.invocation.invocations
-        for pb_invocation in pb_batch:
-            msg = Message(target_typename=sdk_address.typename, target_id=sdk_address.id,
-                          typed_value=pb_invocation.argument)
-            ctx._caller = sdk_address_from_pb(pb_invocation.caller)
-            await fun(ctx, msg)
-                
-        # collect the results
-        pb_from_function = collect_success(ctx)
-        return pb_from_function.SerializeToString()
-```
-
-The code is a reduced to the core logic as far as we need to understand it. The input of `handle_async` is just the raw binary data from the HTTP request body. This seems to contain a protobuf object of the type `ToFunction`. It contains not only the data for a function call but also the "address", i.e. the name of the target function. One `ToFunction` object can hold the data for a whole batch of function calls as we will see later. 
-
-The [definition of the protobufs](https://github.com/apache/flink-statefun/blob/57e13b1cc3863c452b98581ba849e2103a94fe66/statefun-sdk-protos/src/main/protobuf/sdk/request-reply.proto) used are also available in the flink-statefun repository.
-
 
 ## Unit testing ?
 
