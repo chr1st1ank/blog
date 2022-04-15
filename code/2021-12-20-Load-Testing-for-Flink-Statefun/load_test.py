@@ -1,36 +1,28 @@
+"""load_test.py
+
+A simple load test of the stateful function.
 """
-https://locust.io/
-https://github.com/apache/flink-statefun/blob/master/statefun-sdk-protos/src/main/protobuf/sdk/request-reply.proto
-"""
+
+import random
 
 import requests
 import statefun
 import statefun.utils
 import statefun.wrapper_types
-from statefun.request_reply_pb2 import ToFunction, FromFunction, Address
+from locust import HttpUser, between, task
+from statefun.request_reply_pb2 import Address, ToFunction
 
 GREET_REQUEST_TYPE = statefun.make_json_type(typename="example/GreetRequest")
 
-# response = requests.post(
-#     "http://localhost:8888/statefun", data=request_payload.SerializeToString()
-# )
-# print(response.status_code)
-# r = FromFunction()
-# r.ParseFromString(response.content)
-# print(r)
-
-
-from locust import HttpUser, between, task
-
 
 class WebsiteUser(HttpUser):
-    # wait_time = between(5, 15)
+    wait_time = between(0.01, 0.1)
 
     @task
     def greeter(self):
         invocation = ToFunction.Invocation(
             argument=statefun.utils.to_typed_value(
-                GREET_REQUEST_TYPE, {"name": "George", "visits": 3}
+                GREET_REQUEST_TYPE, {"name": "George", "visits": random.randint(1, 3)}
             )
         )
         invocation_batch_request = ToFunction.InvocationBatchRequest(
@@ -41,4 +33,5 @@ class WebsiteUser(HttpUser):
         self.client.post("/statefun", request_payload.SerializeToString())
 
 
-# locust --users 5 --run-time 30s -H "http://localhost:8888" --only-summary -f load_test.py
+# Run with:
+# locust --users 20 --run-time 30s -H "http://localhost:8000" --only-summary -f load_test.py

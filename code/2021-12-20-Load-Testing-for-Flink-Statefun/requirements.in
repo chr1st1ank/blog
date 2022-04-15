@@ -1,0 +1,4 @@
+aiohttp
+apache-flink-statefun==3.2
+locust
+pytest
