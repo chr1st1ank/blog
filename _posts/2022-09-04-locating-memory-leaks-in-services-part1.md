@@ -9,10 +9,10 @@ In a series of two blog posts I'll show how to debug such memory issues in a Pyt
 ## Memory issues in long-running services
 More than once I've seen that a shiny new version of a webservice turned out to be a black whole for computer memory. In the chart below you can see an actual example from a project I worked on. It is a webservice written in Python and deployed to a Kubernetes cluster. There is one Kubernetes deployment per country and the memory usage for all is large but quite stable if you don't consider the steps caused by autoscaling. Only for one of the services ("US"), a new version was deployed on 23 August and as soon as that had started up and got load you can see the steady increase in memory.
 
-<img src="/assets/images/2022-06-18-locating-memory-leaks-in-python-webservices/memory-leak-in-prod.png" alt="Memory metrics of a web service with memory leak" style="width:80%;"/>
+<img src="/assets/images/2022-09-locating-memory-leaks-in-python-webservices/memory-leak-in-prod.png" alt="Memory metrics of a web service with memory leak" style="width:80%;"/>
 
 A simple, but relatively dump countermeasure is to implement some kind of an automated restart of the service as shown in the next example (green: the total number of requests, yellow dotted: reserved memory)
-<img src="/assets/images/2022-06-18-locating-memory-leaks-in-python-webservices/sawtooth-pattern.png" alt="Memory metrics of a web service with sawtooth pattern" style="width:80%;"/>
+<img src="/assets/images/2022-09-locating-memory-leaks-in-python-webservices/sawtooth-pattern.png" alt="Memory metrics of a web service with sawtooth pattern" style="width:80%;"/>
 
 This is from a service which restarts its workers every 2000 requests in order to mitigate a memory leak. This has some disadvantages. For example a few requests might run into server errors when workers are restarted. And of course constant restarts of services also put the infrastructure under unnecessary stress, because every restart might mean new scheduling and additional CPU, network and disk load. Therefore it is better to fix the root cause and I'll describe in the next sections how to identify where the memory leak comes from.
 
@@ -20,13 +20,13 @@ This is from a service which restarts its workers every 2000 requests in order t
 ## Some basics of CPython's memory management
 To have a little background when talking about the main types of memory issues in Python, let's have a very brief look into how memory is managed in Python's reference implementation "CPython". The basic scenario with only pure Python code looks like the following diagram:
 
-<img src="/assets/images/2022-06-18-locating-memory-leaks-in-python-webservices/python-memory-model.svg" alt="The CPython memory model" style="width:80%;"/>
+<img src="/assets/images/2022-09-locating-memory-leaks-in-python-webservices/python-memory-model.svg" alt="The CPython memory model" style="width:80%;"/>
 
 The variables in the stack frames of the CPython stack only contain references to objects which are all stored on the heap. Even simple types such as integers are stored there. But there can be multiple references to the same object on the heap. Every object has a reference counter and the Python runtime makes sure to delete objects which have no more references. But it is also possible to create circular references. Without special treatment they could not be deallocated anymore. This is done in CPython by a garbage collector. It runs every now and then and checks the heap for objects which can be deleted because they are no longer reachable from any reference variable on the stack.
 
 Now let's go a step further and introduce some native extension code on top of the pure Python. Many popular Python packages contain such extensions which use natively compiled code (e.g. in C, C++ or Rust) which can be imported as Python module by the CPython interpreter. What this means for the memory management of a program is shown in the diagram below. The moment a C function is called, we are on a different kind of stack. Other than the Python stack it can also directly contain values and pointers to raw memory. Through the CPython API it can also create and hold references to objects on the Python heap. The important difference is that none of them are fully managed by the Python runtime. It is up to the C programmer to free memory and deallocate references to Python objects.
 
-<img src="/assets/images/2022-06-18-locating-memory-leaks-in-python-webservices/python-memory-model-including-c.svg" alt="The CPython memory model including native function calls" style="width:80%;"/>
+<img src="/assets/images/2022-09-locating-memory-leaks-in-python-webservices/python-memory-model-including-c.svg" alt="The CPython memory model including native function calls" style="width:80%;"/>
 
 This is still quite simplified. There are many more complexities hidden in the CPython implementation. For example, just to name a few:
 - The Python objects on the heap consist of a PyObject including a reference counter and a pointer to the separately stored value.
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 ```
 
 If we simulate some load and send a couple of thousand of requests to the service we can see that the memory grows proportionally to the number of requests:
-<img src="/assets/images/2022-06-18-locating-memory-leaks-in-python-webservices/memory-growth-under-load.png" alt="Memory growth of the webservice under load" style="width:80%;"/>
+<img src="/assets/images/2022-09-locating-memory-leaks-in-python-webservices/memory-growth-under-load.png" alt="Memory growth of the webservice under load" style="width:80%;"/>
 
 ### Overall process statistics
 
@@ -194,24 +194,24 @@ First snapshot taken!
 A second call with the standard parameters shows the ten biggest blocks:
 ```shell
 ❯ curl localhost:8080/tracemalloc
-~/code/blog/code/2022-06-18-locating-memory-leaks-in-python-webservices/api/api.py:24: size=16.3 MiB (+16.3 MiB), count=1 (+1), average=16.3 MiB
+.../api/api.py:24: size=16.3 MiB (+16.3 MiB), count=1 (+1), average=16.3 MiB
 ~/.pyenv/versions/3.10.3/lib/python3.10/uuid.py:715: size=13.3 MiB (+13.3 MiB), count=248153 (+248153), average=56 B
 ~/.pyenv/versions/3.10.3/lib/python3.10/uuid.py:220: size=10.4 MiB (+10.4 MiB), count=248153 (+248153), average=44 B
-~/code/blog/code/2022-06-18-locating-memory-leaks-in-python-webservices/.venv/lib/python3.10/site-packages/fastapi/routing.py:251: size=13.5 KiB (+13.5 KiB), count=82 (+82), average=168 B
-~/code/blog/code/2022-06-18-locating-memory-leaks-in-python-webservices/.venv/lib/python3.10/site-packages/fastapi/dependencies/utils.py:552: size=3864 B (+3864 B), count=69 (+69), average=56 B
+.../.venv/lib/python3.10/site-packages/fastapi/routing.py:251: size=13.5 KiB (+13.5 KiB), count=82 (+82), average=168 B
+.../.venv/lib/python3.10/site-packages/fastapi/dependencies/utils.py:552: size=3864 B (+3864 B), count=69 (+69), average=56 B
 ~/.pyenv/versions/3.10.3/lib/python3.10/asyncio/runners.py:44: size=1792 B (+1792 B), count=10 (+10), average=179 B
 ~/.pyenv/versions/3.10.3/lib/python3.10/asyncio/locks.py:168: size=1656 B (+1656 B), count=11 (+11), average=151 B
-~/code/blog/code/2022-06-18-locating-memory-leaks-in-python-webservices/.venv/lib/python3.10/site-packages/uvicorn/protocols/http/httptools_impl.py:253: size=1581 B (+1581 B), count=5 (+5), average=316 B
-~/code/blog/code/2022-06-18-locating-memory-leaks-in-python-webservices/.venv/lib/python3.10/site-packages/starlette/routing.py:65: size=1552 B (+1552 B), count=3 (+3), average=517 B
+.../.venv/lib/python3.10/site-packages/uvicorn/protocols/http/httptools_impl.py:253: size=1581 B (+1581 B), count=5 (+5), average=316 B
+.../.venv/lib/python3.10/site-packages/starlette/routing.py:65: size=1552 B (+1552 B), count=3 (+3), average=517 B
 ~/.pyenv/versions/3.10.3/lib/python3.10/json/encoder.py:215: size=1472 B (+1472 B), count=23 (+23), average=64 B% 
 ```
 
 The largest entry here is some entry in `api.py`. By using the filter, limit and verbosity arguments one can take a detailed look at the suspect:
 ```shell
 ❯ curl 'localhost:8080/tracemalloc?filter=api.py&n=1&v=true'
-~/code/blog/code/2022-06-18-locating-memory-leaks-in-python-webservices/api/api.py:24: size=16.3 MiB (+16.3 MiB), count=1 (+1), average=16.3 MiB
+.../api/api.py:24: size=16.3 MiB (+16.3 MiB), count=1 (+1), average=16.3 MiB
 1 memory blocks: 16726.8 KiB
-  File "~/code/blog/code/2022-06-18-locating-memory-leaks-in-python-webservices/api/api.py", line 24
+  File ".../api/api.py", line 24
     results.append(i)
 ```
 This clearly shows that we find the place where all these 16.3 MiB of memory were allocated in line 24 of our "api.py". This is the line where we `append()` the result to a list before we return it. So exactly the place where the memory is leaked.
