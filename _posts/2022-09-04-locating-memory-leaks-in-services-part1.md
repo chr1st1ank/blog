@@ -219,4 +219,6 @@ This clearly shows that we find the place where all these 16.3 MiB of memory wer
 ## Summary
 This first part of the series about  memory leaks shows how the memory model of CPython is designed and what the role of the garbage collector is. On a simple example service it is demonstrated how to analyze a leaky program and locate the place where memory is allocated which is not freed later.
 
+As usual, the full source code is [available on Github](https://github.com/chr1st1ank/blog/tree/main/code/2022-09-locating-memory-leaks-in-python-webservices).
+
 The example applies only to pure Python code. In a second post I will also show how to deal with a memory issue which is produced in native code embedded into a Python application. Stay tuned!
