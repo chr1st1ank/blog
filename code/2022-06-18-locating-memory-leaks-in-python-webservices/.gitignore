@@ -1,0 +1,3 @@
+build
+api/*.c
+api/*.so

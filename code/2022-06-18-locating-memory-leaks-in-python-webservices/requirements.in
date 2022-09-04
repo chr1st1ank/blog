@@ -1,0 +1,7 @@
+fastapi[all]
+uvicorn
+cython
+objgraph
+guppy3
+memory_profiler
+psutil

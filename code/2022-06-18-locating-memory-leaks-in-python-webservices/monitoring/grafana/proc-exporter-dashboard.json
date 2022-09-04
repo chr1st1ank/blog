@@ -26,8 +26,7 @@
     "fiscalYearStartMonth": 0,
     "gnetId": 249,
     "graphTooltip": 1,
-    "id": 1,
-    "iteration": 1655547746526,
+    "iteration": 1655548822162,
     "links": [
         {
             "asDropdown": true,
@@ -272,10 +271,16 @@
             "steppedLine": false,
             "targets": [
                 {
-                    "expr": "rate(namedprocess_namegroup_cpu_seconds_total{groupname=~\"$processes\"}[$interval])",
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "expr": "sum by(groupname)(rate(namedprocess_namegroup_cpu_seconds_total{groupname=~\"$processes\"}[$interval]))",
                     "intervalFactor": 2,
                     "legendFormat": "{{groupname}}",
                     "metric": "process_namegroup_cpu_seconds_total",
+                    "range": true,
                     "refId": "A",
                     "step": 10
                 }
@@ -697,8 +702,8 @@
         ]
     },
     "time": {
-        "from": "now-30m",
-        "to": "now"
+        "from": "2022-06-18T11:04:54.546Z",
+        "to": "2022-06-18T11:23:20.796Z"
     },
     "timepicker": {
         "refresh_intervals": [
@@ -728,6 +733,6 @@
     "timezone": "browser",
     "title": "Named processes",
     "uid": "p0BjTrj7k",
-    "version": 4,
+    "version": 1,
     "weekStart": ""
 }
