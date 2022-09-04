@@ -1,15 +1,6 @@
-# Supplements for the blog post "Machine Learning Models Light as a Feather with ONNX"
+# Supplements for the blog posts about Locating memory leaks in a Python service
 
-Explanations can be found [in the blog post](https://blog.krudewig-online.de/2022/04/15/Machine-Learning-Models-Light-as-a-Feather.html).
-
-
-## Monitoring stack
-The minimal monitoring stack in the `/monitoring` folder collects and displays metrics about local Python processes.
-It can be run from the folder with:
-
-```shell
-docker-compose up -d
-```
+Explanations can be found [in the blog post](https://blog.krudewig-online.de/2022/09/04/locating-memory-leaks-in-services-part1.html).
 
 ## Python example code
 ### Setting up the environment

@@ -12,3 +12,6 @@ _site/
 .ipynb_checkpoints/
 __pycache__/
 .venv/
+**/build
+code/**/api/native.c
+code/**/api/native.*.so
