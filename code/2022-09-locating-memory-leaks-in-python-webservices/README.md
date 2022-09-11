@@ -14,10 +14,10 @@ pyenv install 3.10.3
 pyenv local 3.10.3
 # Create a virtual environment:
 pyenv exec python -m venv .venv/
-# Install the dependencies:
-./.venv/bin/pip install -r requirements.txt 
 # Activate the environment:
 source ./.venv/bin/activate
+# Install the dependencies:
+python -m piptools sync requirements.txt
 # Compile the cython extension
 python setup.py build_ext --inplace
 ```
@@ -31,11 +31,11 @@ pyenv local 3.10.3
 # Create a virtual environment:
 pyenv exec python -m venv .venv/
 # Install pip-tools:
-./.venv/bin/pip install pip-tools
+python -m pip install --upgrade pip pip-tools
 # Freeze the dependencies:
-./.venv/bin/pip-compile --output-file requirements.txt requirements.in
+python -m piptools compile --output-file requirements.txt requirements.in
 # Install the dependencies:
-./.venv/bin/pip install -r requirements.txt 
+python -m pip install -r requirements.txt 
 ```
 
 ### Running

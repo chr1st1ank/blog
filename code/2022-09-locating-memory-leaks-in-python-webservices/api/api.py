@@ -1,15 +1,14 @@
 # Run with:
-# uvicorn fastapi_main:app --workers 1 --limit-concurrency 1 --port 8080
 # python api/api.py
 
 # Test with:
 # go run github.com/codesenberg/bombardier -c 4 -d 10s -l 'localhost:8080/leaky'
 
 # valgrind --leak-check=full ./.venv/bin/python api/api.py
+# valgrind --leak-check=full --show-leak-kinds=all --trace-children=yes python api/api.py
 
 import uuid
 from fastapi import FastAPI, Response
-import native
 
 
 app = FastAPI()
@@ -25,7 +24,7 @@ async def leaky_endpoint():
     return {"random UUID": i}
 
 
-# results_native = []
+import native
 
 
 @app.get("/leaky-native")
