@@ -3,8 +3,8 @@ layout: post
 title:  "Locating memory leaks in a Python service – Part 1: Pure Python"
 description: About pure Python memory issues in a FastAPI process
 ---
-Even in a garbage-collected language like Python it is possible to create applications with memory leaks. This means that the program keeps memory reserved vor variables which are no longer needed. So the memory could be freed, but it isn't. Especially in long-running applications this can lead to a huge memory consumption over time, up to a point where the hardware limit is reached.
-In a series of two blog posts I'll show how to debug such memory issues in a Python web service.
+**Even in a garbage-collected language like Python it is possible to create applications with memory leaks. This means that the program keeps memory reserved vor variables which are no longer needed. So the memory could be freed, but it isn't. Especially in long-running applications this can lead to a huge memory consumption over time, up to a point where the hardware limit is reached.
+In a series of two blog posts I'll show how to debug such memory issues in a Python web service.**
 
 ## Memory issues in long-running services
 More than once I've seen that a shiny new version of a webservice turned out to be a black whole for computer memory. In the chart below you can see an actual example from a project I worked on. It is a webservice written in Python and deployed to a Kubernetes cluster. There is one Kubernetes deployment per country and the memory usage for all is large but quite stable if you don't consider the steps caused by autoscaling. Only for one of the services ("US"), a new version was deployed on 23 August and as soon as that had started up and got load you can see the steady increase in memory.
