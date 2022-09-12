@@ -9,7 +9,7 @@ title: About
 Welcome to my personal blog!
 
 The purpose of this space is to let you participate in all the new things and methods I come across on my journey through the world of software engineering.
-At the moment I'm mostly interested in Python, C++, Go, Kubernetes and home automation. So that's what the blog posts will touch upon.
+At the moment I'm mostly interested in Python, Rust, Go, Kubernetes and home automation. So that's what the blog posts will touch upon.
 
 ## About me
 My name is Christian Krudewig and I work as machine learning architect for a big German company.
