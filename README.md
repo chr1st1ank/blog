@@ -24,7 +24,7 @@ The last command installs all the ruby dependencies ("gems") from the Gemfile. T
 ## Build process for local preview
 
 For local development do one of the following:
-- Build the static pages: `bundle exec jekyll build`
+- Build the static pages: `bundle exec jekyll build --future`
 - Serve the pages on a local webserver: `bundle exec jekyll serve -P 8080`
 - Or serve the pages with apache2 from docker: `docker run -it -v $(pwd)/_site:/usr/local/apache2/htdocs -p8080:80 httpd`
 
