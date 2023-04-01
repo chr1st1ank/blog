@@ -8,7 +8,7 @@ title: About
 
 Greetings, I'm Christian Krudewig, lead MLOps engineer and software architect at Deutsche Post DHL.
 
-On my personal blog, you can find thoughts and discoveries on all things related to software engineering. 
+On my personal blog, you can find thoughts and discoveries on all things related to software engineering.
 My primary areas of interest include Python, Rust, machine learning, Kubernetes, Go, and home automation. Therefore, my blog posts focus on these topics and I share some of my learnings in the hope that it may save others some work.
 
 ## About me
