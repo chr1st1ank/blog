@@ -6,21 +6,20 @@ title: About
 
 ![Christian Krudewig]({% link assets/images/profile.png %})
 
-Welcome to my personal blog!
+Greetings, I'm Christian Krudewig. I currently work as a lead MLOps engineer and software architect for Deutsche Post DHL.
 
-The purpose of this space is to let you participate in all the new things and methods I come across on my journey through the world of software engineering.
-At the moment I'm mostly interested in Python, Rust, Go, Kubernetes and home automation. So that's what the blog posts will touch upon.
+Welcome to my personal blog, where I share my thoughts and discoveries on all things related to software engineering.
+
+My primary areas of interest include Python, Rust, machine learning, Kubernetes, Go, and home automation. Therefore, my blog posts focus on these topics and I share some of my learnings in the hope that it may save others some work.
 
 ## About me
-My name is Christian Krudewig and I work as machine learning architect for a big German company.
 
-My day-to-day business is about designing, implementing and reshaping machine learning solutions from the software engineering perspective. 
-Originally I studied economics and spend some more time at universities teaching and researching in the area of operations management. Afterwards I worked as an IT project manager at first, then as a data scientist for some time, before I found my current architect role. The connection between all these activities has always been my love to programming and the fascination for solving real-live problems with mere software. 
+I studied economics at university and subsequently worked as an IT project manager, data scientist and software architect. Now, I'm MLOps tech lead in my department.
 
-Back at university I learned to analyze data and forecast behaviour of markets or tax subjects. During my research I could see how one can solve problems far beyond human solvability with clever algorihms. As a project manager I could contribute to making life much easier for store managers of a big retail company through automated shelf replenishment. And finally, in my current job I immersed into the creation of more and more complex machine learning applications using all the cool tools, languages and cloud environments that we have at hand currently. 
+My work primarily involves designing, implementing, and improving machine learning solutions from a software engineering perspective. Although I originally studied economics, I also spent time teaching and researching operations management at the university. Before assuming my MLOps tech lead role, I worked as a software architect, IT project manager and data scientist. Throughout my career, my passion for programming and my fascination with using software to solve real-world problems have been the common threads connecting all of these activities.
 
-What puzzles me sometimes is that we are now routinely using "established" technologies which just hadn't been there when I finished my studies - and that was in 2009 which doesn't feel that far away for me. Some examples for this are Elasticsearch ([first release 2010](https://en.wikipedia.org/wiki/Elasticsearch)), the Go language ([first appeared 2009](https://en.wikipedia.org/wiki/Go_(programming_language))), Kubernetes ([inital release 2014](https://en.wikipedia.org/wiki/Kubernetes)), scikit-learn([first public release 2010](https://en.wikipedia.org/wiki/Scikit-learn)). I could continue forever with more useful tools, languages, databases and libraries that were introduced in the last ten years, mostly as open source software. I enjoy very much being in the middle of this development and seeing it all come to action.
-
+I am sometimes amazed that we now routinely employ "established" technologies that didn't even exist when I finished my studies in 2009 - not so long ago, in my opinion. The Rust language ([first stable release 2015](https://en.wikipedia.org/wiki/Rust_(programming_language))), Elasticsearch (first release 2010), Kubernetes ([inital release 2014](https://en.wikipedia.org/wiki/Kubernetes)), scikit-learn([first public release 2010](https://en.wikipedia.org/wiki/Scikit-learn)) are a few examples. There are many other useful tools, languages, databases and libraries that have been introduced in the last decade, mostly as open-source software. It is a privilege to be at the forefront of this technological progress and witness it in action.
 
 ## Credits
+
 This page is created with the help of [Jekyll](https://jekyllrb.com/). It uses the ["broccolini/swiss"](https://github.com/broccolini/swiss) theme. Many thanks to all the open source contributors who created this great toolchain that I can build on!
