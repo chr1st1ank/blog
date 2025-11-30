@@ -8,7 +8,7 @@ url: https://blog.krudewig-online.de
 baseurl: ""
 # No link to twitter etc.:
 social_link: dot
-social_username: 
+social_username:
 lang: en_UK
 timezone: Europe/Berlin
 
@@ -27,8 +27,12 @@ kramdown:
 plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
+  - jekyll-feed
 
-exclude: 
+feed:
+  excerpt_only: true
+
+exclude:
   - ".metals/metals.lock.db"
   - ".config/"
   - "README.md"
