@@ -37,3 +37,6 @@ exclude:
   - ".config/"
   - "README.md"
   - "code/"
+  - "vendor/"
+  - "Gemfile"
+  - "Gemfile.lock"
